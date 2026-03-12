@@ -537,11 +537,11 @@ function HowToPlay({ onClose }) {
             {
               num: "1",
               title: "Answer 4 trivia questions",
-              desc: "Each correct answer is a clue.",
+              desc: "Each correct answer is a clue. A fun fact reveals after every answer — right or wrong.",
             },
             {
               num: "2",
-              title: "Find the link",
+              title: "Find the connection",
               desc: "After all 4 questions, type the single word that secretly links all four answers together.",
               note: "Stuck? Hit \"Show Hint\" for a nudge.",
             },
@@ -581,10 +581,10 @@ function HowToPlay({ onClose }) {
               Example
             </div>
             {[
-              { answer: "Rush", note: "→ Canadian rock band" },
-              { answer: "Medal", note: "→ highest military honor" },
-              { answer: "Mine", note: "→ what Nemo's seagulls squawk" },
-              { answer: "Digger", note: "→ ANZAC slang for a soldier" },
+              { answer: "Lining", note: "→ the bright side of a bad situation" },
+              { answer: "Screen", note: "→ where a film is projected in a theater" },
+              { answer: "Bullet", note: "→ the only thing that kills a werewolf" },
+              { answer: "Tongue", note: "→ how a snake senses its environment" },
             ].map(({ answer, note }, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: i < 3 ? 6 : 0 }}>
                 <span style={{ fontSize: 13, color: "#6ee7b7" }}>✓</span>
@@ -593,7 +593,7 @@ function HowToPlay({ onClose }) {
               </div>
             ))}
             <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.07)", fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
-              The connection: <strong style={{ color: "#f59e0b", letterSpacing: "0.06em" }}>GOLD</strong>
+              The connection: <strong style={{ color: "#f59e0b", letterSpacing: "0.06em" }}>SILVER</strong>
             </div>
           </div>
 
