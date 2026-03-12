@@ -232,7 +232,7 @@ function Game({ puzzle, t }) {
   const [connInput,     setConnInput]     = useState("");
   const [connResult,    setConnResult]    = useState(null);
   const [shake,         setShake]         = useState(false);
-  const [hintRevealed,  setHintRevealed]  = useState(false);
+  const [guessCount,    setGuessCount]    = useState(0);
   const [copied,        setCopied]        = useState(false);
   const [sharePreview,  setSharePreview]  = useState(false);
   const [streak,        setStreak]        = useState(0);
@@ -269,21 +269,43 @@ function Game({ puzzle, t }) {
     }
   }
 
+  const MAX_GUESSES = 3;
+
   function handleConnectorSubmit() {
     if (!connInput.trim() || connResult) return;
     const isCorrect = connInput.trim().toUpperCase() === puzzle.connector.answer.toUpperCase();
-    if (!isCorrect) { setShake(true); setTimeout(() => setShake(false), 500); }
-    const result = isCorrect ? "correct" : "wrong";
-    setConnResult(result);
+    const newGuessCount = guessCount + 1;
+    setGuessCount(newGuessCount);
 
+    if (!isCorrect) {
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+      setConnInput("");
+      // If that was the last guess, mark as wrong and end
+      if (newGuessCount >= MAX_GUESSES) {
+        const result = "wrong";
+        setConnResult(result);
+        const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+        const yk = yesterday.toLocaleDateString("en-CA");
+        const playedYesterday = !!localStorage.getItem(`linqed_played_${yk}`);
+        setStreak(0);
+        localStorage.setItem(streakKey, "0");
+        localStorage.setItem(storageKey, JSON.stringify({ answers, connResult: result }));
+        setTimeout(() => setStep(STEPS.DONE), 500);
+      }
+      return;
+    }
+
+    // Correct
+    const result = "correct";
+    setConnResult(result);
     const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
     const yk = yesterday.toLocaleDateString("en-CA");
     const playedYesterday = !!localStorage.getItem(`linqed_played_${yk}`);
-    const newStreak = isCorrect ? (playedYesterday ? streak + 1 : 1) : 0;
+    const newStreak = playedYesterday ? streak + 1 : 1;
     setStreak(newStreak);
     localStorage.setItem(streakKey, String(newStreak));
     localStorage.setItem(storageKey, JSON.stringify({ answers, connResult: result }));
-
     setTimeout(() => setStep(STEPS.DONE), 500);
   }
 
@@ -402,9 +424,22 @@ function Game({ puzzle, t }) {
       </div>
 
       <Card t={t}>
-        <p style={{ fontSize: 12, color: t.textMuted, marginBottom: 10, letterSpacing: "0.05em", textTransform: "uppercase", transition: "color 0.2s" }}>
-          Type the link word:
-        </p>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <p style={{ fontSize: 12, color: t.textMuted, letterSpacing: "0.05em", textTransform: "uppercase", transition: "color 0.2s" }}>
+            Type the link word:
+          </p>
+          <div style={{ display: "flex", gap: 5 }}>
+            {[1,2,3].map(n => (
+              <div key={n} style={{
+                width: 8, height: 8, borderRadius: "50%",
+                background: n <= guessCount
+                  ? (connResult === "correct" && n === guessCount ? "#10b981" : "#ef4444")
+                  : "rgba(255,255,255,0.15)",
+                transition: "background 0.2s",
+              }} />
+            ))}
+          </div>
+        </div>
         <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
           <input ref={inputRef} value={connInput}
             onChange={e => setConnInput(e.target.value)}
@@ -413,7 +448,7 @@ function Game({ puzzle, t }) {
             style={{
               flex: 1, padding: "12px 14px",
               background: t.inputBg,
-              border: `1.5px solid ${connResult === "correct" ? "#10b981" : connResult === "wrong" ? "#ef4444" : t.cardBorder}`,
+              border: `1.5px solid ${connResult === "correct" ? "#10b981" : shake ? "#ef4444" : t.cardBorder}`,
               borderRadius: 8, color: t.inputColor,
               fontFamily: "'DM Mono', monospace", fontSize: 16, fontWeight: 600,
               letterSpacing: "0.1em", textTransform: "uppercase",
@@ -429,12 +464,13 @@ function Game({ puzzle, t }) {
             transition: "opacity 0.15s",
           }}>Go</button>
         </div>
-        {!connResult && puzzle.connector.hint && (
-          hintRevealed
-            ? <p style={{ fontSize: 13, color: "rgba(245,158,11,0.8)", lineHeight: 1.5 }}>💡 {puzzle.connector.hint}</p>
-            : <button onClick={() => setHintRevealed(true)} style={{ fontSize: 12, color: t.textMuted, background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline", transition: "color 0.2s" }}>
-                Show Hint
-              </button>
+        {!connResult && guessCount > 0 && (
+          <p style={{ fontSize: 12, color: "#ef4444", lineHeight: 1.5, marginBottom: puzzle.connector.hint && guessCount >= 2 ? 8 : 0 }}>
+            {guessCount === 1 ? "Not quite — 2 guesses left." : "One guess left!"}
+          </p>
+        )}
+        {!connResult && puzzle.connector.hint && guessCount >= 2 && (
+          <p style={{ fontSize: 13, color: "rgba(245,158,11,0.8)", lineHeight: 1.5 }}>💡 {puzzle.connector.hint}</p>
         )}
       </Card>
     </div>
