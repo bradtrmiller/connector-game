@@ -537,11 +537,11 @@ function HowToPlay({ onClose }) {
             {
               num: "1",
               title: "Answer 4 trivia questions",
-              desc: "Each correct answer is a clue. A fun fact reveals after every answer — right or wrong.",
+              desc: "Each correct answer is a clue.",
             },
             {
               num: "2",
-              title: "Find the connection",
+              title: "Find the link",
               desc: "After all 4 questions, type the single word that secretly links all four answers together.",
               note: "Stuck? Hit \"Show Hint\" for a nudge.",
             },
