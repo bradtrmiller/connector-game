@@ -47,10 +47,10 @@ export default function App() {
     load();
 
     // Show instructions on first ever visit; remember they've seen it
-    const seen = localStorage.getItem("connector_seen_instructions");
+    const seen = localStorage.getItem("linqed_seen_instructions");
     if (!seen) {
       setShowHelp(true);
-      localStorage.setItem("connector_seen_instructions", "1");
+      localStorage.setItem("linqed_seen_instructions", "1");
     }
   }, []);
 
@@ -83,7 +83,7 @@ export default function App() {
             fontFamily: "'Libre Baskerville', serif",
             fontSize: 28, fontWeight: 700, color: "#f5f0e8", letterSpacing: "-0.03em",
           }}>
-            connector
+            lin<span style={{ color: "#f59e0b" }}>q</span>ed
           </div>
           <div style={{
             fontSize: 11, color: "rgba(255,255,255,0.25)",
@@ -132,8 +132,8 @@ export default function App() {
 
 function Game({ puzzle }) {
   const today = getTodayKey();
-  const storageKey = `connector_played_${today}`;
-  const streakKey  = "connector_streak";
+  const storageKey = `linqed_played_${today}`;
+  const streakKey  = "linqed_streak";
 
   const [step, setStep]               = useState(STEPS.TRIVIA);
   const [qIndex, setQIndex]           = useState(0);
@@ -190,7 +190,7 @@ function Game({ puzzle }) {
     // Streak logic
     const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
     const yk = yesterday.toISOString().slice(0, 10);
-    const playedYesterday = !!localStorage.getItem(`connector_played_${yk}`);
+    const playedYesterday = !!localStorage.getItem(`linqed_played_${yk}`);
     const newStreak = isCorrect ? (playedYesterday ? streak + 1 : 1) : 0;
     setStreak(newStreak);
     localStorage.setItem(streakKey, String(newStreak));
@@ -204,7 +204,7 @@ function Game({ puzzle }) {
     const conn  = connResult === "correct" ? "🔗✅" : "🔗❌";
     const score = `${correctCount}/4 + ${connResult === "correct" ? "connection ✓" : "connection ✗"}`;
     // TODO: replace with your real URL once deployed
-    return `🧩 connector — ${today}\n\n${dots} ${conn}\n${score}\n\nconnector-game-nine.vercel.app`;
+    return `🧩 linqed — ${today}\n\n${dots} ${conn}\n${score}\n\nconnector-game-nine.vercel.app`;
   }
 
   function handleShare() {
