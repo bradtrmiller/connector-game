@@ -205,7 +205,7 @@ function Game({ puzzle }) {
     const conn  = connResult === "correct" ? "🔗✅" : "🔗❌";
     const score = `${correctCount}/4 + ${connResult === "correct" ? "connection ✓" : "connection ✗"}`;
     // TODO: replace with your real URL once deployed
-    return `🧩 linqed — ${today}\n\n${dots} ${conn}\n${score}\n\nconnector-game-nine.vercel.app`;
+    return `🧩 linqed — ${today}\n\n${dots} ${conn}\n${score}\n\nplaylinqed.com`;
   }
 
   function handleShare() {
@@ -325,7 +325,7 @@ function Game({ puzzle }) {
           <input ref={inputRef} value={connInput}
             onChange={e => setConnInput(e.target.value)}
             onKeyDown={e => e.key === "Enter" && handleConnectorSubmit()}
-            placeholder="What's the linq?" disabled={!!connResult}
+            placeholder="e.g. GOLD" disabled={!!connResult}
             style={{
               flex: 1, padding: "12px 14px",
               background: "rgba(255,255,255,0.05)",
