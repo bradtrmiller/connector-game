@@ -522,6 +522,27 @@ function Game({ puzzle, t }) {
       <p style={{ fontSize: 12, color: t.textFaint, textAlign: "center", marginTop: 18, lineHeight: 1.6, transition: "color 0.2s" }}>
         Come back tomorrow for a new puzzle.
       </p>
+
+      <div style={{ textAlign: "center", marginTop: 12 }}>
+        <a
+          href="https://bsky.app/profile/bradleywithane.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 7,
+            padding: "8px 14px",
+            background: t.btnBg, border: `1px solid ${t.btnBorder}`,
+            borderRadius: 20, textDecoration: "none",
+            color: t.textMuted, fontSize: 12, fontWeight: 500,
+            transition: "all 0.15s",
+          }}
+        >
+          <svg width="13" height="13" viewBox="0 0 568 501" xmlns="http://www.w3.org/2000/svg">
+            <path d="M123.121 33.664C188.241 82.553 258.281 181.68 284 234.873C309.719 181.68 379.759 82.553 444.879 33.664C491.489 -0.906 568 -28.109 568 57.209C568 74.972 558.055 203.874 552.222 224.544C531.272 299.947 453.42 319.786 384.394 307.604C506.701 328.232 537.807 398.807 473.416 469.384C349.641 602.195 292.816 424.95 278.431 381.284C275.459 372.404 274.033 368.127 284 371.638C293.967 368.127 292.541 372.404 289.569 381.284C275.184 424.95 218.359 602.195 94.584 469.384C30.193 398.807 61.299 328.232 183.606 307.604C114.58 319.786 36.728 299.947 15.778 224.544C9.945 203.874 0 74.972 0 57.209C0 -28.109 76.511 -0.906 123.121 33.664Z" fill="#0085ff"/>
+          </svg>
+          Follow on Bluesky
+        </a>
+      </div>
     </div>
   );
 }
