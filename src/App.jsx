@@ -204,7 +204,7 @@ function Game({ puzzle }) {
     const conn  = connResult === "correct" ? "🔗✅" : "🔗❌";
     const score = `${correctCount}/4 + ${connResult === "correct" ? "connection ✓" : "connection ✗"}`;
     // TODO: replace with your real URL once deployed
-    return `🧩 connector — ${today}\n\n${dots} ${conn}\n${score}\n\nyour-game.vercel.app`;
+    return `🧩 connector — ${today}\n\n${dots} ${conn}\n${score}\n\nconnector-game-nine.vercel.app`;
   }
 
   function handleShare() {
@@ -581,10 +581,10 @@ function HowToPlay({ onClose }) {
               Example
             </div>
             {[
-              { answer: "Salt Lake City", note: "→ SALT" },
-              { answer: "Beast of Burden", note: "→ covered by Salt-N-Pepa" },
-              { answer: "Saline irrigation", note: "→ salt water" },
-              { answer: "Pillar of Salt", note: "→ from Genesis" },
+              { answer: "Rush", note: "→ Canadian rock band" },
+              { answer: "Medal", note: "→ highest military honor" },
+              { answer: "Mine", note: "→ what Nemo's seagulls squawk" },
+              { answer: "Digger", note: "→ ANZAC slang for a soldier" },
             ].map(({ answer, note }, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: i < 3 ? 6 : 0 }}>
                 <span style={{ fontSize: 13, color: "#6ee7b7" }}>✓</span>
@@ -593,7 +593,7 @@ function HowToPlay({ onClose }) {
               </div>
             ))}
             <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.07)", fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
-              The connection: <strong style={{ color: "#f59e0b", letterSpacing: "0.06em" }}>SALT</strong>
+              The connection: <strong style={{ color: "#f59e0b", letterSpacing: "0.06em" }}>GOLD</strong>
             </div>
           </div>
 
