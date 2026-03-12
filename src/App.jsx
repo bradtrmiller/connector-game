@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getTodayKey() {
-  return new Date().toISOString().slice(0, 10);
+  return new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD in local timezone
 }
 
 // Renders *asterisk-wrapped* words in gold, everything else in baseColor
