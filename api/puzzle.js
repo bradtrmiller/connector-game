@@ -45,9 +45,11 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: "Invalid puzzle data" });
     }
 
-    // Get today's date in YYYY-MM-DD format using UTC
-    // (puzzle changes at midnight UTC — adjust if you want midnight in a different timezone)
-    const today = new Date().toISOString().slice(0, 10);
+    // Use the date sent by the client (their local timezone)
+    // Fall back to server UTC if not provided
+    const today = (req.query.date && /^\d{4}-\d{2}-\d{2}$/.test(req.query.date))
+      ? req.query.date
+      : new Date().toISOString().slice(0, 10);
 
     // Find today's puzzle, or fall back to the most recent past puzzle
     const sorted     = allPuzzles.filter(p => p.date <= today).sort((a, b) => b.date.localeCompare(a.date));
