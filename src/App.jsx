@@ -325,7 +325,7 @@ function Game({ puzzle }) {
           <input ref={inputRef} value={connInput}
             onChange={e => setConnInput(e.target.value)}
             onKeyDown={e => e.key === "Enter" && handleConnectorSubmit()}
-            placeholder="e.g. GOLD" disabled={!!connResult}
+            placeholder="What's the linq?" disabled={!!connResult}
             style={{
               flex: 1, padding: "12px 14px",
               background: "rgba(255,255,255,0.05)",
