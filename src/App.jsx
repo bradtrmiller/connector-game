@@ -290,7 +290,7 @@ function Game({ puzzle, t }) {
   function buildShareText() {
     const dots  = answers.map(a => a.isCorrect ? "🟩" : "🟥").join("");
     const conn  = connResult === "correct" ? "🔗✅" : "🔗❌";
-    const score = `${correctCount}/4 + ${connResult === "correct" ? "connection ✓" : "connection ✗"}`;
+    const score = `${correctCount}/4 + ${connResult === "correct" ? "link ✓" : "link ✗"}`;
     return `🧩 linqed — ${today}\n\n${dots} ${conn}\n${score}\n\nplaylinqed.com`;
   }
 
@@ -366,14 +366,14 @@ function Game({ puzzle, t }) {
             <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.6, transition: "color 0.2s" }}>{q.fact}</p>
           </div>
           <GoldBtn onClick={handleNext}>
-            {qIndex + 1 < totalQ ? "Next Question →" : "Find the Connection →"}
+            {qIndex + 1 < totalQ ? "Next Question →" : "Find the Link →"}
           </GoldBtn>
         </div>
       )}
 
       {!answered && (
         <p style={{ fontSize: 11, color: t.textFaint, textAlign: "center", marginTop: 14, letterSpacing: "0.03em", transition: "color 0.2s" }}>
-          After 4 answers, guess the connecting word.
+          After 4 answers, find the link.
         </p>
       )}
     </div>
@@ -386,10 +386,10 @@ function Game({ puzzle, t }) {
       <div style={{ textAlign: "center", marginBottom: 24 }}>
         <Tag t={t} accent>Final Round</Tag>
         <h2 style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "clamp(20px,4vw,26px)", fontWeight: 700, color: t.text, lineHeight: 1.3, marginBottom: 8, transition: "color 0.2s" }}>
-          What's the<br /><span style={{ color: "#f59e0b" }}>connection?</span>
+          What's the<br /><span style={{ color: "#f59e0b" }}>link?</span>
         </h2>
         <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.6, maxWidth: 320, margin: "0 auto 20px", transition: "color 0.2s" }}>
-          {puzzle.connector.prompt || "What single word secretly connects all four answers?"}
+          {puzzle.connector.prompt || "One word secretly links all four answers. What is it?"}
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
           {answers.map((a, i) => (
@@ -403,7 +403,7 @@ function Game({ puzzle, t }) {
 
       <Card t={t}>
         <p style={{ fontSize: 12, color: t.textMuted, marginBottom: 10, letterSpacing: "0.05em", textTransform: "uppercase", transition: "color 0.2s" }}>
-          Type the connecting word:
+          Type the link word:
         </p>
         <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
           <input ref={inputRef} value={connInput}
@@ -454,13 +454,13 @@ function Game({ puzzle, t }) {
       <div style={{ textAlign: "center", marginBottom: 20 }}>
         <div style={{ fontSize: 52, marginBottom: 8 }}>{emoji}</div>
         <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: 22, fontWeight: 700, color: t.text, marginBottom: 4, transition: "color 0.2s" }}>
-          {correctCount}/{totalQ} + {connResult === "correct" ? "connection ✓" : "connection ✗"}
+          {correctCount}/{totalQ} + {connResult === "correct" ? "link ✓" : "link ✗"}
         </div>
         {streakMsg && <div style={{ fontSize: 13, color: t.textMuted, transition: "color 0.2s" }}>{streakMsg}</div>}
       </div>
 
       <div style={{ background: t.recapBg, border: `1px solid ${t.recapBorder}`, borderRadius: 10, padding: "12px 16px", marginBottom: 12, textAlign: "center", transition: "background 0.2s" }}>
-        <p style={{ fontSize: 12, color: t.textMuted, marginBottom: 4, letterSpacing: "0.06em", textTransform: "uppercase", transition: "color 0.2s" }}>The connection was</p>
+        <p style={{ fontSize: 12, color: t.textMuted, marginBottom: 4, letterSpacing: "0.06em", textTransform: "uppercase", transition: "color 0.2s" }}>The link word was</p>
         <p style={{ fontFamily: "'DM Mono', monospace", fontSize: 22, fontWeight: 700, color: "#f59e0b", letterSpacing: "0.12em" }}>
           {puzzle.connector.answer}
         </p>
@@ -603,7 +603,7 @@ function HowToPlay({ onClose, t }) {
         <div style={{ padding: "20px 20px 24px" }}>
           {[
             { num: "1", title: "Answer 4 trivia questions", desc: "Each correct answer is a clue. A fun fact reveals after every answer — right or wrong." },
-            { num: "2", title: "Find the connection", desc: "After all 4 questions, type the single word that secretly links all four answers together.", note: 'Stuck? Hit "Show Hint" for a nudge.' },
+            { num: "2", title: "Find the link", desc: "After all 4 questions, type the single word that secretly links all four answers together — that's the link word.", note: 'Stuck? Hit "Show Hint" for a nudge.' },
             { num: "3", title: "Share your result", desc: "See how you scored and share a spoiler-free emoji grid with friends." },
           ].map(({ num, title, desc, note }) => (
             <div key={num} style={{ display: "flex", gap: 14, marginBottom: 20 }}>
@@ -640,7 +640,7 @@ function HowToPlay({ onClose, t }) {
               </div>
             ))}
             <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${t.divider}`, fontSize: 13, color: t.textSub, transition: "color 0.2s" }}>
-              The connection: <strong style={{ color: "#f59e0b", letterSpacing: "0.06em" }}>SILVER</strong>
+              The link word: <strong style={{ color: "#f59e0b", letterSpacing: "0.06em" }}>SILVER</strong>
             </div>
           </div>
 
