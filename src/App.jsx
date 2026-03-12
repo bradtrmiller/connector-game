@@ -33,7 +33,8 @@ export default function App() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/puzzle");
+        const localDate = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD in local timezone
+        const res = await fetch(`/api/puzzle?date=${localDate}`);
         if (!res.ok) throw new Error(res.status);
         const data = await res.json();
         if (!data || !data.questions) { setStatus("no-puzzle"); return; }
