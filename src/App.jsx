@@ -310,11 +310,9 @@ function Game({ puzzle, t }) {
   }
 
   function buildShareText() {
-    const dots  = answers.map(a => a.isCorrect ? "🟩" : "🟥").join("");
-    const conn  = connResult === "correct" ? "🔗✅" : "🔗❌";
-    const linkResult = connResult === "correct" ? `link ✓ (${guessCount}/3)` : "link ✗";
-    const score = `${correctCount}/4 + ${linkResult}`;
-    return `🧩 linqed — ${today}\n\n${dots} ${conn}\n${score}\n\nplaylinqed.com`;
+    const dots = answers.map(a => a.isCorrect ? "🟩" : "🟥").join("");
+    const conn = connResult === "correct" ? "🔗✅" : "🔗❌";
+    return `🧩 linqed — ${today}\n\n${dots} ${conn}\n\nplaylinqed.com`;
   }
 
   function handleShare() {
