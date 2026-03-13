@@ -311,7 +311,8 @@ function Game({ puzzle, t }) {
 
   function buildShareText() {
     const dots = answers.map(a => a.isCorrect ? "🟩" : "🟥").join("");
-    const conn = connResult === "correct" ? "🔗✅" : "🔗❌";
+    const wrongGuesses = connResult === "correct" ? guessCount - 1 : guessCount;
+    const conn = "🔗" + "❌".repeat(wrongGuesses) + (connResult === "correct" ? "✅" : "");
     return `🧩 linqed — ${today}\n\n${dots} ${conn}\n\nplaylinqed.com`;
   }
 
