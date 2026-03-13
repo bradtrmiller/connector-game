@@ -241,9 +241,10 @@ function Game({ puzzle, t }) {
   useEffect(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved) {
-      const { answers: a, connResult: cr } = JSON.parse(saved);
+      const { answers: a, connResult: cr, guessCount: gc } = JSON.parse(saved);
       setAnswers(a);
       setConnResult(cr);
+      setGuessCount(gc || 0);
       setStep(STEPS.DONE);
     }
     setStreak(parseInt(localStorage.getItem(streakKey) || "0"));
@@ -290,7 +291,7 @@ function Game({ puzzle, t }) {
         const playedYesterday = !!localStorage.getItem(`linqed_played_${yk}`);
         setStreak(0);
         localStorage.setItem(streakKey, "0");
-        localStorage.setItem(storageKey, JSON.stringify({ answers, connResult: result }));
+        localStorage.setItem(storageKey, JSON.stringify({ answers, connResult: result, guessCount: newGuessCount }));
         setTimeout(() => setStep(STEPS.DONE), 500);
       }
       return;
@@ -305,14 +306,14 @@ function Game({ puzzle, t }) {
     const newStreak = playedYesterday ? streak + 1 : 1;
     setStreak(newStreak);
     localStorage.setItem(streakKey, String(newStreak));
-    localStorage.setItem(storageKey, JSON.stringify({ answers, connResult: result }));
+    localStorage.setItem(storageKey, JSON.stringify({ answers, connResult: result, guessCount: newGuessCount }));
     setTimeout(() => setStep(STEPS.DONE), 500);
   }
 
   function buildShareText() {
     const dots = answers.map(a => a.isCorrect ? "🟩" : "🟥").join("");
-    const wrongGuesses = connResult === "correct" ? guessCount - 1 : guessCount;
-    const conn = "🔗" + "❌".repeat(wrongGuesses) + (connResult === "correct" ? "✅" : "");
+    const wrongGuesses = Math.max(0, connResult === "correct" ? guessCount - 1 : guessCount);
+    const conn = "🔗" + "❌".repeat(wrongGuesses) + (connResult === "correct" ? "✅" : "❌".repeat(Math.max(0, 3 - wrongGuesses)));
     return `🧩 linqed — ${today}\n\n${dots} ${conn}\n\nplaylinqed.com`;
   }
 
