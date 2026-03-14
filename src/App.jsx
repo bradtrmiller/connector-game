@@ -274,7 +274,9 @@ function Game({ puzzle, t }) {
 
   function handleConnectorSubmit() {
     if (!connInput.trim() || connResult) return;
-    const isCorrect = connInput.trim().toUpperCase() === puzzle.connector.answer.toUpperCase();
+    const inputVal = connInput.trim().toUpperCase();
+    const aliases = (puzzle.connector.aliases || []).map(a => a.toUpperCase());
+    const isCorrect = inputVal === puzzle.connector.answer.toUpperCase() || aliases.includes(inputVal);
     const newGuessCount = guessCount + 1;
     setGuessCount(newGuessCount);
 
