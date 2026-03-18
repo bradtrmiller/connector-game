@@ -555,7 +555,7 @@ function Game({ puzzle, t }) {
           border: `1px solid ${copied ? "rgba(16,185,129,0.3)" : t.sharePreviewBorder}`,
           borderRadius: 10, color: copied ? "#6ee7b7" : t.text,
           fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "all 0.2s",
-        }}>{copied ? "✓ Copied!" : "📋 Copy Results"}</button>
+        }}>{copied ? "✓ Copied!" : "🤳 Share Results"}</button>
       </div>
 
       <p style={{ fontSize: 12, color: t.textFaint, textAlign: "center", marginTop: 18, lineHeight: 1.6, transition: "color 0.2s" }}>
