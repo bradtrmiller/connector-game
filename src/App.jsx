@@ -555,7 +555,7 @@ function Game({ puzzle, t }) {
           border: `1px solid ${copied ? "rgba(16,185,129,0.3)" : t.sharePreviewBorder}`,
           borderRadius: 10, color: copied ? "#6ee7b7" : t.text,
           fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "all 0.2s",
-        }}>{copied ? "✓ Copied!" : "🤳 Share Results"}</button>
+        }}>{copied ? "✓ Copied!" : "📋 Copy Results"}</button>
       </div>
 
       <p style={{ fontSize: 12, color: t.textFaint, textAlign: "center", marginTop: 18, lineHeight: 1.6, transition: "color 0.2s" }}>
@@ -629,25 +629,32 @@ function HowToPlay({ onClose, t }) {
     <div onClick={onClose} style={{
       position: "fixed", inset: 0, zIndex: 100,
       background: t.overlay,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: "24px 16px",
+      display: "flex", alignItems: "flex-end", justifyContent: "center",
       animation: "fadeIn 0.2s ease forwards",
     }}>
       <div onClick={e => e.stopPropagation()} style={{
-        width: "100%", maxWidth: 420,
+        width: "100%", maxWidth: 480,
         background: t.modalBg,
         border: `1px solid ${t.cardBorder}`,
-        borderRadius: 16, overflow: "hidden",
-        boxShadow: "0 24px 64px rgba(0,0,0,0.4)",
+        borderRadius: "16px 16px 0 0",
+        maxHeight: "92vh",
+        display: "flex", flexDirection: "column",
+        boxShadow: "0 -8px 40px rgba(0,0,0,0.35)",
         transition: "background 0.2s",
       }}>
-        {/* Modal header */}
+        {/* Drag handle */}
+        <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 4px" }}>
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: t.divider }} />
+        </div>
+
+        {/* Header */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "18px 20px 16px",
+          padding: "4px 16px 12px",
           borderBottom: `1px solid ${t.divider}`,
+          flexShrink: 0,
         }}>
-          <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: 18, fontWeight: 700, color: t.text, transition: "color 0.2s" }}>
+          <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: 17, fontWeight: 700, color: t.text, transition: "color 0.2s" }}>
             How to Play
           </div>
           <button onClick={onClose} style={{
@@ -655,61 +662,60 @@ function HowToPlay({ onClose, t }) {
             background: t.btnBg, border: "none", color: t.btnColor,
             fontSize: 16, cursor: "pointer", lineHeight: 1,
             display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "all 0.15s",
           }}>✕</button>
         </div>
 
-        {/* Modal body */}
-        <div style={{ padding: "20px 20px 24px" }}>
+        {/* Scrollable body */}
+        <div style={{ padding: "16px 16px 20px", overflowY: "auto", flex: 1 }}>
           {[
-            { num: "1", title: "Answer 4 trivia questions", desc: "Each correct answer is a clue. A fun fact reveals after every answer — right or wrong." },
-            { num: "2", title: "Find the link", desc: "After all 4 questions, type the single word that secretly links all four answers together — that's the link word.", note: 'Stuck? Hit "Show Hint" for a nudge.' },
-            { num: "3", title: "Share your result", desc: "See how you scored and share a spoiler-free emoji grid with friends." },
+            { num: "1", title: "Answer 4 trivia questions", desc: "Each correct answer is a clue. A fun fact reveals after every answer." },
+            { num: "2", title: "Find the link", desc: "Type the single word that secretly links all four answers together.", note: 'Stuck? The hint appears on your last guess.' },
+            { num: "3", title: "Share your result", desc: "Share a spoiler-free emoji grid with friends." },
           ].map(({ num, title, desc, note }) => (
-            <div key={num} style={{ display: "flex", gap: 14, marginBottom: 20 }}>
+            <div key={num} style={{ display: "flex", gap: 12, marginBottom: 16 }}>
               <div style={{
-                width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
                 background: "rgba(245,158,11,0.15)",
                 border: "1.5px solid rgba(245,158,11,0.4)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontFamily: "'DM Mono', monospace", fontSize: 12, fontWeight: 600, color: "#f59e0b",
+                fontFamily: "'DM Mono', monospace", fontSize: 11, fontWeight: 600, color: "#f59e0b",
               }}>{num}</div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: t.text, marginBottom: 4, transition: "color 0.2s" }}>{title}</div>
-                <div style={{ fontSize: 13, color: t.textSub, lineHeight: 1.55, transition: "color 0.2s" }}>{desc}</div>
-                {note && <div style={{ fontSize: 12, color: "rgba(245,158,11,0.7)", marginTop: 5, lineHeight: 1.5 }}>💡 {note}</div>}
+                <div style={{ fontSize: 13, fontWeight: 600, color: t.text, marginBottom: 3, transition: "color 0.2s" }}>{title}</div>
+                <div style={{ fontSize: 12, color: t.textSub, lineHeight: 1.5, transition: "color 0.2s" }}>{desc}</div>
+                {note && <div style={{ fontSize: 11, color: "rgba(245,158,11,0.7)", marginTop: 4, lineHeight: 1.5 }}>💡 {note}</div>}
               </div>
             </div>
           ))}
 
           {/* Example */}
-          <div style={{ background: t.exampleBg, border: `1px solid ${t.exampleBorder}`, borderRadius: 10, padding: "14px 16px", marginBottom: 20, transition: "background 0.2s" }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: t.textFaint, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10, transition: "color 0.2s" }}>
+          <div style={{ background: t.exampleBg, border: `1px solid ${t.exampleBorder}`, borderRadius: 8, padding: "12px 14px", marginBottom: 16, transition: "background 0.2s" }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: t.textFaint, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
               Example
             </div>
             {[
-              { answer: "Lining",  note: "→ the bright side of a bad situation" },
-              { answer: "Screen",  note: "→ where a film is projected in a theater" },
-              { answer: "Bullet",  note: "→ the only thing that kills a werewolf" },
-              { answer: "Tongue",  note: "→ how a snake senses its environment" },
+              { answer: "Lining",  note: "→ bright side of a bad situation" },
+              { answer: "Screen",  note: "→ where a film is projected" },
+              { answer: "Bullet",  note: "→ kills a werewolf" },
+              { answer: "Tongue",  note: "→ how a snake senses things" },
             ].map(({ answer, note }, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: i < 3 ? 6 : 0 }}>
-                <span style={{ fontSize: 13, color: "#6ee7b7" }}>✓</span>
-                <span style={{ fontSize: 13, color: t.text, fontWeight: 500, transition: "color 0.2s" }}>{answer}</span>
-                <span style={{ fontSize: 12, color: t.textMuted, transition: "color 0.2s" }}>{note}</span>
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: i < 3 ? 5 : 0 }}>
+                <span style={{ fontSize: 12, color: "#6ee7b7" }}>✓</span>
+                <span style={{ fontSize: 12, color: t.text, fontWeight: 500 }}>{answer}</span>
+                <span style={{ fontSize: 11, color: t.textMuted }}>{note}</span>
               </div>
             ))}
-            <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${t.divider}`, fontSize: 13, color: t.textSub, transition: "color 0.2s" }}>
+            <div style={{ marginTop: 10, paddingTop: 8, borderTop: `1px solid ${t.divider}`, fontSize: 12, color: t.textSub }}>
               The link word: <strong style={{ color: "#f59e0b", letterSpacing: "0.06em" }}>SILVER</strong>
             </div>
           </div>
 
-          <div style={{ fontSize: 12, color: t.textMuted, lineHeight: 1.6, textAlign: "center", transition: "color 0.2s" }}>
-            A new puzzle drops every day at midnight. 🔥 Build your streak by playing daily.
+          <div style={{ fontSize: 11, color: t.textMuted, lineHeight: 1.6, textAlign: "center", marginBottom: 14 }}>
+            A new puzzle every day at midnight. 🔥 Build your streak.
           </div>
 
           <button onClick={onClose} style={{
-            width: "100%", marginTop: 18, padding: "13px",
+            width: "100%", padding: "13px",
             background: "#f59e0b", border: "none", borderRadius: 10,
             color: "#07070d", fontSize: 14, fontWeight: 700,
             cursor: "pointer", letterSpacing: "0.03em",
