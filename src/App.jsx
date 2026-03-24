@@ -22,6 +22,45 @@ function renderHighlighted(text, baseColor, highlightColor = "#f59e0b") {
 
 const STEPS = { TRIVIA: "trivia", CONNECTOR: "connector", DONE: "done" };
 
+const EXAMPLE_PUZZLE = {
+  date: "2026-03-11",
+  questions: [
+    {
+      question: "This Canadian rock band, formed in Toronto in 1968, is known for complex time signatures, prog epics like '2112,' and a lineup that remained unchanged for over 40 years. What is their name?",
+      answers: ["Triumph", "Rush", "Bachman-Turner Overdrive", "The Guess Who"],
+      correct: 1,
+      fact: "Rush's classic lineup of Geddy Lee, Alex Lifeson, and Neil Peart was inducted into the Rock and Roll Hall of Fame in 2013. Peart, widely considered one of the greatest rock drummers ever, passed away in 2020.",
+      displayAnswer: "*Gold* Rush",
+      connectionNote: "The *Gold* Rush — the 1849 mass migration to California in search of fortune."
+    },
+    {
+      question: "America's highest military decoration is awarded by the President in the name of Congress. What single word completes its name: the Congressional ___ of Honor?",
+      answers: ["Badge", "Star", "Medal", "Cross"],
+      correct: 2,
+      fact: "The Medal of Honor has been awarded fewer than 3,500 times since it was created during the Civil War. As of 2024, there are fewer than 65 living recipients.",
+      displayAnswer: "*Gold* Medal",
+      connectionNote: "A *gold* medal — the ultimate prize in Olympic competition."
+    },
+    {
+      question: "In the 2003 Pixar film Finding Nemo, a flock of seagulls fight over scraps on a pier. What single word do they squawk over and over as they scramble for food?",
+      answers: ["Food", "Here", "Mine", "Now"],
+      correct: 2,
+      fact: "The seagull scene in Finding Nemo became one of the most quoted moments in the film. Director Andrew Stanton said the birds were inspired by the way real seagulls behave — pure selfish chaos.",
+      displayAnswer: "*Gold* Mine",
+      connectionNote: "A *gold* mine — literally where gold is found, and a metaphor for anything enormously valuable."
+    },
+    {
+      question: "In Australian and New Zealand slang, this term of endearment is used to refer to a soldier — especially one who served at Gallipoli during World War I. What is the word?",
+      answers: ["Cobber", "Bloke", "Digger", "Mate"],
+      correct: 2,
+      fact: "The term is thought to come from the trench warfare of WWI, where soldiers spent much of their time digging. It became a lasting symbol of ANZAC identity and is still used affectionately in both countries today.",
+      displayAnswer: "*Gold* Digger",
+      connectionNote: "*Gold* Digger — the Kanye West hit, and slang for someone who's in it for the money."
+    }
+  ],
+  connector: { answer: "GOLD", hint: "It's at the end of a rainbow.", reveal: "" }
+};
+
 // ─── Theme definitions ────────────────────────────────────────────────────────
 
 const THEMES = {
@@ -125,11 +164,59 @@ export default function App() {
     localStorage.setItem("linqed_theme", next ? "dark" : "light");
   }
 
+  const [soundOn, setSoundOn] = useState(() => {
+    const s = localStorage.getItem("linqed_sound");
+    return s === null ? false : s === "true";
+  });
+
+  function toggleSound() {
+    setSoundOn(prev => {
+      const next = !prev;
+      localStorage.setItem("linqed_sound", String(next));
+      return next;
+    });
+  }
+
+  function playSound(type) {
+    if (!soundOn) return;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const g = ctx.createGain();
+      g.connect(ctx.destination);
+      const sounds = {
+        correct:     [{ f: 523, t: 0,    d: 0.12 }, { f: 659, t: 0.1,  d: 0.12 }],
+        wrong:       [{ f: 220, t: 0,    d: 0.18, wave: "sawtooth" }],
+        linkCorrect: [{ f: 523, t: 0,    d: 0.1  }, { f: 659, t: 0.08, d: 0.1 }, { f: 784, t: 0.16, d: 0.1 }, { f: 1047, t: 0.26, d: 0.2 }],
+        linkWrong:   [{ f: 180, t: 0,    d: 0.25, wave: "sawtooth" }],
+        complete:    [{ f: 523, t: 0,    d: 0.08 }, { f: 659, t: 0.07, d: 0.08 }, { f: 784, t: 0.14, d: 0.08 }, { f: 1047, t: 0.22, d: 0.08 }, { f: 1319, t: 0.31, d: 0.3 }],
+      };
+      (sounds[type] || []).forEach(({ f, t: start, d, wave = "sine" }) => {
+        const o = ctx.createOscillator();
+        const og = ctx.createGain();
+        o.connect(og); og.connect(g);
+        o.type = wave; o.frequency.value = f;
+        og.gain.setValueAtTime(0.18, ctx.currentTime + start);
+        og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + d);
+        o.start(ctx.currentTime + start);
+        o.stop(ctx.currentTime + start + d + 0.01);
+      });
+    } catch(e) {}
+  }
+
 
   // Keep body background in sync
   useEffect(() => {
     document.body.style.background = t.bg;
   }, [t.bg]);
+
+  const [replayKey, setReplayKey] = useState(0);
+
+  function loadExample() {
+    localStorage.removeItem(`linqed_played_${EXAMPLE_PUZZLE.date}`);
+    setPuzzle(EXAMPLE_PUZZLE);
+    setStatus("ready");
+    setReplayKey(k => k + 1);
+  }
 
   useEffect(() => {
     async function load() {
@@ -183,6 +270,17 @@ export default function App() {
 
         {/* Right-side buttons */}
         <div style={{ position: "absolute", right: 24, top: "50%", transform: "translateY(-50%)", display: "flex", gap: 8 }}>
+          {/* Sound toggle */}
+          <button onClick={toggleSound} title={soundOn ? "Mute sounds" : "Enable sounds"} style={{
+            width: 30, height: 30, borderRadius: "50%",
+            background: t.btnBg, border: `1.5px solid ${t.btnBorder}`,
+            color: t.btnColor, fontSize: 14, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all 0.15s", opacity: soundOn ? 1 : 0.45,
+          }}>
+            {soundOn ? "🔊" : "🔇"}
+          </button>
+
           {/* Theme toggle */}
           <button onClick={toggleTheme} title={isDark ? "Switch to light mode" : "Switch to dark mode"} style={{
             width: 30, height: 30, borderRadius: "50%",
@@ -209,9 +307,21 @@ export default function App() {
       <div style={{ display: "flex", justifyContent: "center", padding: "28px 16px 48px" }}>
         <div style={{ width: "100%", maxWidth: 480 }}>
           {status === "loading"   && <LoadingScreen t={t} />}
-          {status === "error"     && <MessageScreen t={t} emoji="⚠️" title="Couldn't load today's puzzle" sub="Try refreshing the page." />}
+          {status === "error" && (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "60vh", gap: 12, textAlign: "center" }}>
+              <div style={{ fontSize: 40 }}>⚠️</div>
+              <p style={{ fontSize: 16, fontWeight: 600, color: t.textSub, transition: "color 0.2s" }}>Couldn't load today's puzzle</p>
+              <p style={{ fontSize: 13, color: t.textMuted, transition: "color 0.2s" }}>Try refreshing the page.</p>
+              <button onClick={loadExample} style={{
+                marginTop: 8, padding: "10px 20px",
+                background: "rgba(245,158,11,0.1)", border: "1.5px solid rgba(245,158,11,0.35)",
+                borderRadius: 8, color: "#f59e0b", fontSize: 13, fontWeight: 600,
+                cursor: "pointer", letterSpacing: "0.03em",
+              }}>▶ Play example puzzle</button>
+            </div>
+          )}
           {status === "no-puzzle" && <MessageScreen t={t} emoji="📭" title="No puzzle today" sub="Check back tomorrow!" />}
-          {status === "ready" && puzzle && <Game puzzle={puzzle} t={t} />}
+          {status === "ready" && puzzle && <Game key={puzzle === EXAMPLE_PUZZLE ? replayKey : "daily"} puzzle={puzzle} t={t} playSound={playSound} isExample={puzzle === EXAMPLE_PUZZLE} onReplay={loadExample} />}
         </div>
       </div>
 
@@ -228,7 +338,7 @@ export default function App() {
 
 // ─── Game ─────────────────────────────────────────────────────────────────────
 
-function Game({ puzzle, t }) {
+function Game({ puzzle, t, playSound = () => {}, isExample = false, onReplay }) {
   const today      = getTodayKey();
   const storageKey = `linqed_played_${today}`;
   const streakKey  = "linqed_streak";
@@ -246,13 +356,15 @@ function Game({ puzzle, t }) {
   const inputRef = useRef(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      const { answers: a, connResult: cr, guessCount: gc } = JSON.parse(saved);
-      setAnswers(a);
-      setConnResult(cr);
-      setGuessCount(gc || 0);
-      setStep(STEPS.DONE);
+    if (!isExample) {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const { answers: a, connResult: cr, guessCount: gc } = JSON.parse(saved);
+        setAnswers(a);
+        setConnResult(cr);
+        setGuessCount(gc || 0);
+        setStep(STEPS.DONE);
+      }
     }
     setStreak(parseInt(localStorage.getItem(streakKey) || "0"));
   }, []);
@@ -266,6 +378,7 @@ function Game({ puzzle, t }) {
     if (answered) return;
     const isCorrect = idx === q.correct;
     setAnswers(prev => [...prev, { selected: idx, correct: q.correct, isCorrect }]);
+    playSound(isCorrect ? "correct" : "wrong");
   }
 
   function handleNext() {
@@ -291,6 +404,7 @@ function Game({ puzzle, t }) {
       setShake(true);
       setTimeout(() => setShake(false), 500);
       setConnInput("");
+      playSound("linkWrong");
       // If that was the last guess, mark as wrong and end
       if (newGuessCount >= MAX_GUESSES) {
         const result = "wrong";
@@ -309,6 +423,8 @@ function Game({ puzzle, t }) {
     // Correct
     const result = "correct";
     setConnResult(result);
+    playSound("linkCorrect");
+    setTimeout(() => playSound("complete"), 560);
     const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
     const yk = yesterday.toLocaleDateString("en-CA");
     const playedYesterday = !!localStorage.getItem(`linqed_played_${yk}`);
@@ -562,12 +678,23 @@ function Game({ puzzle, t }) {
           border: `1px solid ${copied ? "rgba(16,185,129,0.3)" : t.sharePreviewBorder}`,
           borderRadius: 10, color: copied ? "#6ee7b7" : t.text,
           fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "all 0.2s",
-        }}>{copied ? "✓ Copied!" : "🗣 Share Results"}</button>
+        }}>{copied ? "✓ Copied!" : "📋 Copy Results"}</button>
       </div>
 
-      <p style={{ fontSize: 12, color: t.textFaint, textAlign: "center", marginTop: 18, lineHeight: 1.6, transition: "color 0.2s" }}>
-        Come back tomorrow for a new puzzle.
-      </p>
+      {isExample ? (
+        <div style={{ textAlign: "center", marginTop: 18 }}>
+          <button onClick={() => { if (onReplay) onReplay(); }} style={{
+            padding: "10px 22px",
+            background: "rgba(245,158,11,0.1)", border: "1.5px solid rgba(245,158,11,0.35)",
+            borderRadius: 8, color: "#f59e0b", fontSize: 13, fontWeight: 600,
+            cursor: "pointer", letterSpacing: "0.03em", transition: "all 0.15s",
+          }}>↩ Replay example puzzle</button>
+        </div>
+      ) : (
+        <p style={{ fontSize: 12, color: t.textFaint, textAlign: "center", marginTop: 18, lineHeight: 1.6, transition: "color 0.2s" }}>
+          Come back tomorrow for a new puzzle.
+        </p>
+      )}
 
       <div style={{ textAlign: "center", marginTop: 12 }}>
         <a
