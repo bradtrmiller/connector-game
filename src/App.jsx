@@ -125,6 +125,7 @@ export default function App() {
     localStorage.setItem("linqed_theme", next ? "dark" : "light");
   }
 
+
   // Keep body background in sync
   useEffect(() => {
     document.body.style.background = t.bg;
@@ -205,7 +206,7 @@ export default function App() {
       </div>
 
       {/* Body */}
-      <div style={{ display: "flex", justifyContent: "center", padding: "28px 16px 60px" }}>
+      <div style={{ display: "flex", justifyContent: "center", padding: "28px 16px 48px" }}>
         <div style={{ width: "100%", maxWidth: 480 }}>
           {status === "loading"   && <LoadingScreen t={t} />}
           {status === "error"     && <MessageScreen t={t} emoji="⚠️" title="Couldn't load today's puzzle" sub="Try refreshing the page." />}
@@ -215,6 +216,12 @@ export default function App() {
       </div>
 
       {showHelp && <HowToPlay t={t} onClose={() => setShowHelp(false)} />}
+
+      <div style={{ textAlign: "center", paddingBottom: 28, transition: "color 0.2s" }}>
+        <p style={{ fontSize: 11, color: t.textFaint, letterSpacing: "0.04em" }}>
+          A game by <span style={{ color: "#f59e0b", fontWeight: 600 }}>Bradley Miller</span>
+        </p>
+      </div>
     </div>
   );
 }
@@ -555,7 +562,7 @@ function Game({ puzzle, t }) {
           border: `1px solid ${copied ? "rgba(16,185,129,0.3)" : t.sharePreviewBorder}`,
           borderRadius: 10, color: copied ? "#6ee7b7" : t.text,
           fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "all 0.2s",
-        }}>{copied ? "✓ Copied!" : "📋 Copy Results"}</button>
+        }}>{copied ? "✓ Copied!" : "🗣 Share Results"}</button>
       </div>
 
       <p style={{ fontSize: 12, color: t.textFaint, textAlign: "center", marginTop: 18, lineHeight: 1.6, transition: "color 0.2s" }}>
