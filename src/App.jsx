@@ -504,15 +504,17 @@ function Game({ puzzle, t, playSound = () => {}, isExample = false, onReplay }) 
 
       {answered && (
         <div className="pop">
-          <div style={{
-            background: answered.isCorrect ? t.factBgOk : t.factBgErr,
-            border: `1px solid ${answered.isCorrect ? t.factBorderOk : t.factBorderErr}`,
-            borderRadius: 10, padding: "14px 16px", marginBottom: 10,
-            display: "flex", gap: 10, alignItems: "flex-start",
-          }}>
-            <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{answered.isCorrect ? "🎯" : "💡"}</span>
-            <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.6, transition: "color 0.2s" }}>{q.fact}</p>
-          </div>
+          {q.fact && (
+            <div style={{
+              background: answered.isCorrect ? t.factBgOk : t.factBgErr,
+              border: `1px solid ${answered.isCorrect ? t.factBorderOk : t.factBorderErr}`,
+              borderRadius: 10, padding: "14px 16px", marginBottom: 10,
+              display: "flex", gap: 10, alignItems: "flex-start",
+            }}>
+              <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>{answered.isCorrect ? "🎯" : "💡"}</span>
+              <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.6, transition: "color 0.2s" }}>{q.fact}</p>
+            </div>
+          )}
           <GoldBtn onClick={handleNext}>
             {qIndex + 1 < totalQ ? "Next Question →" : "Find the Link →"}
           </GoldBtn>
