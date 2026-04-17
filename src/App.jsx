@@ -100,6 +100,7 @@ export default function App() {
   const [puzzle,        setPuzzle]        = useState(null);
   const [puzzleStatus,  setPuzzleStatus]  = useState("loading"); // loading | ready | error | no-puzzle
   const [showHelp,      setShowHelp]      = useState(false);
+  const [showHardPromo, setShowHardPromo]  = useState(false);
   const [showArchive,   setShowArchive]   = useState(false);
   const [archivePuzzle, setArchivePuzzle] = useState(null);
   const [archiveMode,   setArchiveMode]   = useState(null);
@@ -191,6 +192,12 @@ export default function App() {
     load();
     const seen = localStorage.getItem("linqed_seen_instructions");
     if (!seen) { setShowHelp(true); localStorage.setItem("linqed_seen_instructions", "1"); }
+    const seenHardPromo = localStorage.getItem("linqed_seen_hard_promo");
+    const beforeExpiry = Date.now() < new Date("2026-04-18").getTime();
+    if (!seenHardPromo && beforeExpiry) {
+      const streak = parseInt(localStorage.getItem("linqed_streak") || "0");
+      if (streak > 0) { setShowHardPromo(true); localStorage.setItem("linqed_seen_hard_promo", "1"); }
+    }
   }, []);
 
   const headerButtons = (
@@ -383,6 +390,7 @@ export default function App() {
           )}
         </div>
       </div>
+      {showHardPromo && <HardModePromo t={t} onClose={() => setShowHardPromo(false)} />}
       {showHelp && <HowToPlay t={t} onClose={() => setShowHelp(false)} />}
       <Footer t={t} />
     </div>
@@ -536,15 +544,16 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
   const [guessCount,   setGuessCount]   = useState(0);
   const [copied,       setCopied]       = useState(false);
   const [streak,       setStreak]       = useState(0);
-  const [hintUsed,     setHintUsed]     = useState(false);
+  const [hintUsed,     setHintUsed]     = useState(-1); // -1 = not used, otherwise = guessCount when used
+  const [guessHistory, setGuessHistory]  = useState([]); // hard mode: [{answers, connWrong}] per guess
   const inputRef = useRef(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved) {
-      const { answers: a, connResult: cr, guessCount: gc, hardMode: hm, hintUsed: hu } = JSON.parse(saved);
+      const { answers: a, connResult: cr, guessCount: gc, hardMode: hm, hintUsed: hu, guessHistory: gh } = JSON.parse(saved);
       setAnswers(a); setConnResult(cr); setGuessCount(gc || 0);
-      setHardMode(hm || false); setHintUsed(hu || false); setStep(STEPS.DONE);
+      setHardMode(hm || false); setHintUsed(hu !== undefined ? hu : -1); setGuessHistory(gh || []); setStep(STEPS.DONE);
     }
     if (!isArchive) setStreak(parseInt(localStorage.getItem(streakKey) || "0"));
   }, []);
@@ -616,13 +625,18 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
     const newGuessCount = guessCount + 1;
     setGuessCount(newGuessCount);
 
+    // Snapshot this guess for hard mode share text
+    const snapshot = { answers: currentAnswers.map(a => a.isCorrect), connCorrect: isCorrect, hintUsedThisGuess: hintUsed === guessCount };
+    const newGuessHistory = hardMode ? [...guessHistory, snapshot] : guessHistory;
+    if (hardMode) setGuessHistory(newGuessHistory);
+
     if (!isCorrect) {
       setShake(true); setTimeout(() => setShake(false), 500);
       setConnInput(""); playSound("linkWrong");
       track("link_guessed", { correct: false, guess_number: newGuessCount, puzzle_date: puzzle.date, mode: hardMode ? "hard" : "normal" });
       if (newGuessCount >= 3) {
         const result = "wrong"; setConnResult(result);
-        localStorage.setItem(storageKey, JSON.stringify({ answers: currentAnswers, connResult: result, guessCount: newGuessCount, hardMode, hintUsed }));
+        localStorage.setItem(storageKey, JSON.stringify({ answers: currentAnswers, connResult: result, guessCount: newGuessCount, hardMode, hintUsed, guessHistory: newGuessHistory }));
         if (!isArchive) { setStreak(0); localStorage.setItem(streakKey, "0"); }
         track("puzzle_completed", { result: "failed", trivia_score: currentAnswers.filter(a => a.isCorrect).length, puzzle_date: puzzle.date, mode: hardMode ? "hard" : "normal", is_archive: isArchive });
         setTimeout(() => setStep(STEPS.DONE), 500);
@@ -634,7 +648,7 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
     playSound("linkCorrect"); setTimeout(() => playSound("complete"), 560);
     track("link_guessed", { correct: true, guess_number: newGuessCount, puzzle_date: puzzle.date, mode: hardMode ? "hard" : "normal" });
     track("puzzle_completed", { result: "success", trivia_score: currentAnswers.filter(a => a.isCorrect).length, guess_number: newGuessCount, puzzle_date: puzzle.date, mode: hardMode ? "hard" : "normal", is_archive: isArchive });
-    localStorage.setItem(storageKey, JSON.stringify({ answers: currentAnswers, connResult: result, guessCount: newGuessCount, hardMode, hintUsed }));
+    localStorage.setItem(storageKey, JSON.stringify({ answers: currentAnswers, connResult: result, guessCount: newGuessCount, hardMode, hintUsed, guessHistory: newGuessHistory }));
     if (!isArchive) {
       const today = new Date().toLocaleDateString("en-CA");
       const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
@@ -650,12 +664,25 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
   }
 
   function buildShareText() {
+    const label = isArchive ? `linqed archive — ${puzzle.date}` : `linqed — ${puzzle.date}`;
+    const hintTag = hintUsed !== -1 ? " 💡" : "";
+
+    if (hardMode && guessHistory.length > 1) {
+      // Multi-row hard mode share
+      const rows = guessHistory.map((snap, i) => {
+        const dots = snap.answers.map(correct => correct ? "🟩" : "🟥").join("");
+        const connEmoji = snap.connCorrect ? "✅" : "❌";
+        const hint = snap.hintUsedThisGuess ? "💡" : "";
+        return `${dots} 🔗${connEmoji}${hint}`;
+      });
+      return `🧩 linqed 😈 — ${puzzle.date}\n${rows.join("\n")}\n\nplaylinqed.com`;
+    }
+
+    // Normal single-row share
     const dots = answers.map(a => a.isCorrect ? "🟩" : "🟥").join("");
     const wrongGuesses = Math.max(0, connResult === "correct" ? guessCount - 1 : guessCount);
     const conn = "🔗" + "❌".repeat(wrongGuesses) + (connResult === "correct" ? "✅" : "❌".repeat(Math.max(0, 3 - wrongGuesses)));
-    const label = isArchive ? `linqed archive — ${puzzle.date}` : `linqed — ${puzzle.date}`;
     const modeTag = hardMode ? " 😈 Hard Mode" : "";
-    const hintTag = hintUsed ? " 💡" : "";
     return `🧩 ${label}${modeTag}${hintTag}\n\n${dots} ${conn}\n\nplaylinqed.com`;
   }
 
@@ -885,9 +912,9 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
             <button onClick={handleConnectorSubmit} disabled={!connInput.trim() || !!connResult} style={{ padding: "12px 18px", background: "#f59e0b", border: "none", borderRadius: 8, color: "#07070d", fontSize: 14, fontWeight: 700, cursor: connInput.trim() && !connResult ? "pointer" : "not-allowed", opacity: connInput.trim() && !connResult ? 1 : 0.4, transition: "opacity 0.15s" }}>Go</button>
           </div>
           {!connResult && guessCount > 0 && <p style={{ fontSize: 12, color: "#ef4444", lineHeight: 1.5, marginBottom: 8 }}>{guessCount === 1 ? "Not quite — 2 guesses left." : "One guess left!"}</p>}
-          {!connResult && puzzle.connector.hint && !hintUsed && (
+          {!connResult && puzzle.connector.hint && hintUsed === -1 && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 6 }}>
-            <button onClick={() => setHintUsed(true)} style={{ padding: "6px 16px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 999, color: "rgba(245,158,11,0.85)", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", cursor: "pointer", transition: "all 0.15s", animation: guessCount >= 2 ? "pulse 1s ease-in-out infinite" : "none" }}>
+            <button onClick={() => setHintUsed(guessCount)} style={{ padding: "6px 16px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 999, color: "rgba(245,158,11,0.85)", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", cursor: "pointer", transition: "all 0.15s", animation: guessCount >= 2 ? "pulse 1s ease-in-out infinite" : "none" }}>
               💡 Stuck? Use a hint
             </button>
             {Date.now() < new Date("2026-04-15").getTime() && (
@@ -895,7 +922,7 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
             )}
           </div>
         )}
-        {!connResult && hintUsed && puzzle.connector.hint && (
+        {!connResult && hintUsed !== -1 && puzzle.connector.hint && (
           <p style={{ fontSize: 13, color: "rgba(245,158,11,0.8)", lineHeight: 1.5, marginTop: 4 }}>💡 {puzzle.connector.hint}</p>
         )}
         </Card>
@@ -1021,9 +1048,9 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
           <button onClick={handleConnectorSubmit} disabled={!connInput.trim() || !!connResult} style={{ padding: "12px 18px", background: "#f59e0b", border: "none", borderRadius: 8, color: "#07070d", fontSize: 14, fontWeight: 700, cursor: connInput.trim() && !connResult ? "pointer" : "not-allowed", opacity: connInput.trim() && !connResult ? 1 : 0.4, transition: "opacity 0.15s" }}>Go</button>
         </div>
         {!connResult && guessCount > 0 && <p style={{ fontSize: 12, color: "#ef4444", lineHeight: 1.5, marginBottom: 8 }}>{guessCount === 1 ? "Not quite — 2 guesses left." : "One guess left!"}</p>}
-        {!connResult && puzzle.connector.hint && !hintUsed && (
+        {!connResult && puzzle.connector.hint && hintUsed === -1 && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 6 }}>
-            <button onClick={() => setHintUsed(true)} style={{ padding: "6px 16px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 999, color: "rgba(245,158,11,0.85)", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", cursor: "pointer", transition: "all 0.15s", animation: guessCount >= 2 ? "pulse 1s ease-in-out infinite" : "none" }}>
+            <button onClick={() => setHintUsed(guessCount)} style={{ padding: "6px 16px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 999, color: "rgba(245,158,11,0.85)", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", cursor: "pointer", transition: "all 0.15s", animation: guessCount >= 2 ? "pulse 1s ease-in-out infinite" : "none" }}>
               💡 Stuck? Use a hint
             </button>
             {Date.now() < new Date("2026-04-15").getTime() && (
@@ -1031,7 +1058,7 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
             )}
           </div>
         )}
-        {!connResult && hintUsed && puzzle.connector.hint && (
+        {!connResult && hintUsed !== -1 && puzzle.connector.hint && (
           <p style={{ fontSize: 13, color: "rgba(245,158,11,0.8)", lineHeight: 1.5, marginTop: 4 }}>💡 {puzzle.connector.hint}</p>
         )}
       </Card>
@@ -1175,6 +1202,35 @@ function Footer({ t }) {
   );
 }
 
+
+function HardModePromo({ onClose, t }) {
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 200, background: t.overlay, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fadeIn 0.2s ease forwards" }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 400, background: t.modalBg, border: `1px solid ${t.cardBorder}`, borderRadius: 16, boxShadow: "0 8px 40px rgba(0,0,0,0.35)", overflow: "hidden", transition: "background 0.2s" }}>
+        <div style={{ padding: "24px 20px 8px", textAlign: "center", position: "relative" }}>
+          <button onClick={onClose} style={{ position: "absolute", right: 16, top: 16, width: 28, height: 28, borderRadius: "50%", background: t.btnBg, border: "none", color: t.btnColor, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+          <div style={{ fontSize: 32, marginBottom: 10 }}>😈</div>
+          <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: 18, fontWeight: 700, color: t.text, marginBottom: 8, transition: "color 0.2s" }}>Try Hard Mode</div>
+          <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.7, marginBottom: 16, transition: "color 0.2s" }}>
+            No feedback on your trivia answers. Go in blind — then find the link. Each guess gets its own row in your share card.
+          </p>
+        </div>
+        {/* Mock share card */}
+        <div style={{ margin: "0 20px 20px", background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 10, padding: "14px 16px", fontFamily: "'DM Mono', monospace", fontSize: 13, lineHeight: 2 }}>
+          <div style={{ fontSize: 11, color: "rgba(245,158,11,0.6)", letterSpacing: "0.08em", marginBottom: 6 }}>EXAMPLE SHARE CARD</div>
+          <div>🧩 linqed 😈 — today</div>
+          <div>🟥🟥🟩🟩 🔗❌</div>
+          <div>🟩🟥🟩🟩 🔗❌</div>
+          <div>🟩🟩🟩🟩 🔗✅</div>
+        </div>
+        <div style={{ padding: "0 20px 24px", display: "flex", flexDirection: "column", gap: 8 }}>
+          <button onClick={onClose} style={{ width: "100%", padding: "13px", background: "#f59e0b", border: "none", borderRadius: 10, color: "#07070d", fontSize: 14, fontWeight: 700, cursor: "pointer", letterSpacing: "0.03em" }}>Try it today →</button>
+          <button onClick={onClose} style={{ width: "100%", padding: "11px", background: "transparent", border: `1px solid ${t.cardBorder}`, borderRadius: 10, color: t.textMuted, fontSize: 13, cursor: "pointer" }}>Maybe later</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function HowToPlay({ onClose, t }) {
   return (
