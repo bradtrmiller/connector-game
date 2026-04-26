@@ -96,6 +96,195 @@ const THEMES = {
 };
 
 // ── Root ──────────────────────────────────────────────────────────────────────
+
+// ── Network Animation (Welcome Screen Graphic) ────────────────────────────────
+const BATCHES = [
+  { clues: ["RUSH",    "MEDAL",  "MINE",    "DIGGER"],  linq: "GOLD"   },
+  { clues: ["CURTAIN", "MAIDEN", "CHEF",    "WAFFLE"],  linq: "IRON"   },
+  { clues: ["CAMP",    "TRUCK",  "FRIENDLY","ESCAPE"],  linq: "FIRE"   },
+  { clues: ["RUNNING", "PAPER",  "HATCH",   "HORSE"],   linq: "BACK"   },
+  { clues: ["SAND",    "LIME",   "CORNER",  "FLINT"],   linq: "STONE"  },
+  { clues: ["FLUSH",   "BLUE",   "FAMILY",  "TIES"],    linq: "ROYAL"  },
+  { clues: ["FINGERS", "FLY",    "CUP",     "MILK"],    linq: "BUTTER" },
+  { clues: ["TREE",    "CRAB",   "PIES",    "CARAMEL"], linq: "APPLE"  },
+  { clues: ["MALL",    "POWER",  "VEGAS",   "CLUB"],    linq: "STRIP"  },
+  { clues: ["EATER",   "TRIUMPH","HILL",    "FIRE"],    linq: "ANT"    },
+  { clues: ["UP",      "SIX",    "NOSE",    "CHERRY"],  linq: "PICK"   },
+  { clues: ["SAG",     "PUNCH",  "TRUMP",   "RED"],     linq: "CARD"   },
+];
+const VB_W = 600, VB_H = 380;
+const CENTER_N = { x: 300, y: 190 };
+const OUTER_N = [
+  { x: 90,  y: 80,  key: "tl" },
+  { x: 510, y: 80,  key: "tr" },
+  { x: 510, y: 300, key: "br" },
+  { x: 90,  y: 300, key: "bl" },
+];
+const NW = 160, NH = 54, CW = 200, CH = 70;
+const STAGGER_MS = 600, CENTER_DELAY_MS = 3200, HOLD_MS = 4200, FADE_MS = 700, PULSE_MS = 1100;
+const BATCH_DUR = CENTER_DELAY_MS + 300 + HOLD_MS + FADE_MS + PULSE_MS;
+
+function NetworkGraphic({ dark }) {
+  const [batchIdx, setBatchIdx] = React.useState(0);
+  const [, setTick] = React.useState(0);
+  const startRef = React.useRef(performance.now());
+  const rafRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const loop = () => {
+      const elapsed = performance.now() - startRef.current;
+      if (elapsed >= BATCH_DUR) { startRef.current = performance.now(); setBatchIdx(i => (i + 1) % BATCHES.length); }
+      setTick(t => t + 1);
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    rafRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  const elapsed = performance.now() - startRef.current;
+  const batch = BATCHES[batchIdx];
+
+  const fadeStart = CENTER_DELAY_MS + 300 + HOLD_MS;
+  const fadeEnd = fadeStart + FADE_MS;
+  const fadeT = elapsed > fadeStart ? Math.min(1, (elapsed - fadeStart) / FADE_MS) : 0;
+  const fadeOpacity = 1 - fadeT;
+  const inPulse = elapsed > fadeEnd;
+  const pulseT = inPulse ? Math.min(1, (elapsed - fadeEnd) / PULSE_MS) : 0;
+  const pulseAmp = inPulse ? Math.sin(pulseT * Math.PI) : 0;
+
+  function nodeAlpha(i) {
+    const t = (elapsed - i * STAGGER_MS) / 280;
+    return t <= 0 ? 0 : t >= 1 ? 1 : t;
+  }
+  function nodeScale(i) {
+    const t = (elapsed - i * STAGGER_MS) / 320;
+    if (t <= 0) return 0.7;
+    if (t >= 1) return 1;
+    return 0.7 + 0.3 * (1 - Math.pow(1 - t, 3)) + Math.sin(t * Math.PI) * 0.06;
+  }
+  function centerAlpha() {
+    const t = (elapsed - CENTER_DELAY_MS) / 320;
+    return t <= 0 ? 0 : t >= 1 ? 1 : t;
+  }
+  function centerScale() {
+    const t = (elapsed - CENTER_DELAY_MS) / 380;
+    if (t <= 0) return 0.6;
+    if (t >= 1) return 1;
+    return 0.6 + 0.4 * (1 - Math.pow(1 - t, 3)) + Math.sin(t * Math.PI) * 0.08;
+  }
+  const lp = Math.max(0, Math.min(1, (elapsed - CENTER_DELAY_MS + 200) / 600));
+  const ca = centerAlpha() * fadeOpacity;
+  const cs = centerScale();
+  const nodeBg = dark ? "#11121a" : "#ffffff";
+  const ghostA = (dark ? 0.18 : 0.22);
+
+  return (
+    <div style={{ margin: "4px auto 24px", maxWidth: 360, width: "100%" }}>
+      <svg viewBox={`0 0 ${VB_W} ${VB_H}`} style={{ width: "100%", height: "auto", display: "block" }}>
+        <defs>
+          <filter id="ng-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="5" result="b" />
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        {/* Connection lines — endpoints computed to land exactly on box edges */}
+        {OUTER_N.map((n, i) => {
+          const dx = CENTER_N.x - n.x, dy = CENTER_N.y - n.y;
+          const len = Math.sqrt(dx*dx + dy*dy);
+          const ux = dx/len, uy = dy/len;
+
+          // Outer node edge: clip to rounded-rect edge along the direction
+          // Half-extents of outer node
+          const hw = NW/2, hh = NH/2;
+          const tX = ux !== 0 ? hw / Math.abs(ux) : Infinity;
+          const tY = uy !== 0 ? hh / Math.abs(uy) : Infinity;
+          const trimOuter = Math.min(tX, tY);
+          const x1 = n.x + ux * trimOuter, y1 = n.y + uy * trimOuter;
+
+          // Center node edge: clip coming from the opposite direction
+          const chw = CW/2, chh = CH/2;
+          const tCX = ux !== 0 ? chw / Math.abs(ux) : Infinity;
+          const tCY = uy !== 0 ? chh / Math.abs(uy) : Infinity;
+          const trimCenter = Math.min(tCX, tCY);
+          const x2 = CENTER_N.x - ux * trimCenter, y2 = CENTER_N.y - uy * trimCenter;
+
+          const alpha = nodeAlpha(i) * (0.15 + 0.85 * lp) * fadeOpacity;
+          return (
+            <g key={n.key}>
+              <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#f59e0b" strokeOpacity={alpha * 0.35} strokeWidth={8} filter="url(#ng-glow)" />
+              <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#f59e0b" strokeOpacity={alpha} strokeWidth={2} strokeLinecap="round" />
+              <circle cx={x1} cy={y1} r={3} fill="#f59e0b" opacity={alpha} />
+              <circle cx={x2} cy={y2} r={3} fill="#f59e0b" opacity={alpha} />
+            </g>
+          );
+        })}
+
+        {/* Ghost nodes */}
+        {OUTER_N.map((n, i) => (
+          <rect key={`g-${n.key}`}
+            x={n.x - NW/2} y={n.y - NH/2} width={NW} height={NH} rx={12}
+            fill="none" stroke="#f59e0b"
+            strokeOpacity={ghostA + pulseAmp * 0.4}
+            strokeWidth={1.5 + pulseAmp * 1.4}
+            strokeDasharray="4 6" />
+        ))}
+        <rect x={CENTER_N.x - CW/2} y={CENTER_N.y - CH/2} width={CW} height={CH} rx={16}
+          fill="none" stroke="#f59e0b"
+          strokeOpacity={ghostA + pulseAmp * 0.45}
+          strokeWidth={1.5 + pulseAmp * 1.6}
+          strokeDasharray="4 6" />
+
+        {/* Pulse thinking lines */}
+        {inPulse && OUTER_N.map((n, i) => {
+          const dx = CENTER_N.x - n.x, dy = CENTER_N.y - n.y;
+          const len = Math.sqrt(dx*dx + dy*dy);
+          const ux = dx/len, uy = dy/len;
+          const trimOuter = Math.min(ux !== 0 ? (NW/2)/Math.abs(ux) : Infinity, uy !== 0 ? (NH/2)/Math.abs(uy) : Infinity);
+          const trimCenter = Math.min(ux !== 0 ? (CW/2)/Math.abs(ux) : Infinity, uy !== 0 ? (CH/2)/Math.abs(uy) : Infinity);
+          return (
+            <line key={`p-${n.key}`}
+              x1={n.x + ux*trimOuter} y1={n.y + uy*trimOuter}
+              x2={CENTER_N.x - ux*trimCenter} y2={CENTER_N.y - uy*trimCenter}
+              stroke="#f59e0b" strokeOpacity={pulseAmp * 0.3}
+              strokeWidth={1} strokeDasharray="3 5" />
+          );
+        })}
+
+        {/* Outer active nodes */}
+        {OUTER_N.map((n, i) => (
+          <g key={n.key} opacity={nodeAlpha(i) * fadeOpacity}
+            transform={`translate(${n.x} ${n.y}) scale(${nodeScale(i)})`}>
+            <rect x={-NW/2} y={-NH/2} width={NW} height={NH} rx={12}
+              fill={nodeBg} stroke="#f59e0b" strokeWidth={2} />
+            <text x={0} y={8} textAnchor="middle"
+              fontFamily="'DM Mono', monospace" fontSize={20} fontWeight={600}
+              letterSpacing="1.5" fill="#f59e0b">
+              {batch.clues[i]}
+            </text>
+          </g>
+        ))}
+
+        {/* Center active node */}
+        <g opacity={ca} transform={`translate(${CENTER_N.x} ${CENTER_N.y}) scale(${cs})`}>
+          <rect x={-CW/2 - 6} y={-CH/2 - 6} width={CW+12} height={CH+12} rx={20}
+            fill="#f59e0b" opacity={0.18} filter="url(#ng-glow)" />
+          <rect x={-CW/2} y={-CH/2} width={CW} height={CH} rx={16}
+            fill="#f59e0b" stroke="#d97706" strokeWidth={1.5} />
+          <text x={0} y={-14} textAnchor="middle"
+            fontFamily="'DM Mono', monospace" fontSize={10} fontWeight={600}
+            letterSpacing="3.5" fill="#07070d" fillOpacity={0.5}>LINK</text>
+          <text x={0} y={18} textAnchor="middle"
+            fontFamily="'DM Mono', monospace" fontSize={26} fontWeight={600}
+            letterSpacing="4" fill="#07070d">
+            {batch.linq}
+          </text>
+        </g>
+      </svg>
+    </div>
+  );
+}
+
 export default function App() {
   const [puzzle,        setPuzzle]        = useState(null);
   const [puzzleStatus,  setPuzzleStatus]  = useState("loading"); // loading | ready | error | no-puzzle
@@ -716,44 +905,8 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
   if (step === STEPS.MODE) return (
     <div className="fade-up" style={{ textAlign: "center" }}>
 
-      {/* Graphic — four answer tiles flowing into a link word */}
-      <div style={{ margin: "8px auto 28px", maxWidth: 320 }}>
-        <svg viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "auto" }}>
-          {/* Four answer tiles */}
-          {[
-            { x: 8,   label: "Rush" },
-            { x: 84,  label: "Medal" },
-            { x: 160, label: "Mine" },
-            { x: 236, label: "Digger" },
-          ].map(({ x, label }, i) => (
-            <g key={i}>
-              <rect x={x} y={8} width={68} height={36} rx={7}
-                fill={`rgba(245,158,11,${0.06 + i * 0.03})`}
-                stroke="rgba(245,158,11,0.25)" strokeWidth="1" />
-              <text x={x + 34} y={31} textAnchor="middle"
-                fontFamily="DM Sans, sans-serif" fontSize="12" fontWeight="600"
-                fill="rgba(245,158,11,0.9)">{label}</text>
-            </g>
-          ))}
-
-          {/* Converging lines */}
-          {[34, 118, 194, 270].map((cx, i) => (
-            <line key={i}
-              x1={cx} y1={44}
-              x2={160} y2={108}
-              stroke="rgba(245,158,11,0.2)" strokeWidth="1.5"
-              strokeDasharray="3 3" />
-          ))}
-
-          {/* Link word tile */}
-          <rect x={110} y={108} width={100} height={40} rx={8}
-            fill="rgba(245,158,11,0.15)"
-            stroke="rgba(245,158,11,0.5)" strokeWidth="1.5" />
-          <text x={160} y={133} textAnchor="middle"
-            fontFamily="DM Mono, monospace" fontSize="14" fontWeight="700"
-            fill="#f59e0b" letterSpacing="2">GOLD</text>
-        </svg>
-      </div>
+      {/* Network animation graphic */}
+      <NetworkGraphic dark={t.bg === "#07070d"} />
 
       {/* Tagline — streak quip or default */}
       {(() => {
