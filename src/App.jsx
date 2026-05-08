@@ -289,6 +289,7 @@ export default function App() {
   const [puzzle,        setPuzzle]        = useState(null);
   const [puzzleStatus,  setPuzzleStatus]  = useState("loading"); // loading | ready | error | no-puzzle
   const [showHelp,      setShowHelp]      = useState(false);
+  const [showSettings,  setShowSettings]  = useState(false);
   const [showHardPromo, setShowHardPromo]  = useState(false);
   const [showArchive,   setShowArchive]   = useState(false);
   const [archivePuzzle, setArchivePuzzle] = useState(null);
@@ -330,6 +331,21 @@ export default function App() {
     setSoundOn(prev => {
       const next = !prev;
       localStorage.setItem("linqed_sound", String(next));
+      if (next) {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          [{ f: 400, t: 0, d: 0.06 }, { f: 600, t: 0.05, d: 0.08 }, { f: 800, t: 0.11, d: 0.1 }].forEach(({ f, t: start, d }) => {
+            const o = ctx.createOscillator();
+            const og = ctx.createGain();
+            o.connect(og); og.connect(ctx.destination);
+            o.type = "sine"; o.frequency.value = f;
+            og.gain.setValueAtTime(0.18, ctx.currentTime + start);
+            og.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + d);
+            o.start(ctx.currentTime + start);
+            o.stop(ctx.currentTime + start + d + 0.01);
+          });
+        } catch(e) {}
+      }
       return next;
     });
   }
@@ -346,6 +362,7 @@ export default function App() {
         linkCorrect: [{ f: 523, t: 0,    d: 0.1  }, { f: 659, t: 0.08, d: 0.1 }, { f: 784, t: 0.16, d: 0.1 }, { f: 1047, t: 0.26, d: 0.2 }],
         linkWrong:   [{ f: 180, t: 0,    d: 0.25, wave: "sawtooth" }],
         complete:    [{ f: 523, t: 0,    d: 0.08 }, { f: 659, t: 0.07, d: 0.08 }, { f: 784, t: 0.14, d: 0.08 }, { f: 1047, t: 0.22, d: 0.08 }, { f: 1319, t: 0.31, d: 0.3 }],
+        toggleOn:    [{ f: 400, t: 0, d: 0.06 }, { f: 600, t: 0.05, d: 0.08 }, { f: 800, t: 0.11, d: 0.1 }],
       };
       (sounds[type] || []).forEach(({ f, t: start, d, wave = "sine" }) => {
         const o = ctx.createOscillator();
@@ -390,10 +407,8 @@ export default function App() {
   }, []);
 
   const headerButtons = (
-    <div style={{ position: "absolute", right: 24, top: "50%", transform: "translateY(-50%)", display: "flex", gap: 8 }}>
-      <button onClick={toggleSound} style={{ width: 30, height: 30, borderRadius: "50%", background: t.btnBg, border: `1.5px solid ${t.btnBorder}`, color: t.btnColor, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s", opacity: soundOn ? 1 : 0.45 }}>{soundOn ? "🔊" : "🔇"}</button>
-      <button onClick={toggleTheme} style={{ width: 30, height: 30, borderRadius: "50%", background: t.btnBg, border: `1.5px solid ${t.btnBorder}`, color: t.btnColor, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>{isDark ? "☀️" : "🌙"}</button>
-      <button onClick={() => setShowHelp(true)} style={{ width: 30, height: 30, borderRadius: "50%", background: t.btnBg, border: `1.5px solid ${t.btnBorder}`, color: t.btnColor, fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>?</button>
+    <div style={{ position: "absolute", right: 20, top: "50%", transform: "translateY(-50%)" }}>
+      <button onClick={() => setShowSettings(s => !s)} style={{ width: 32, height: 32, borderRadius: "50%", background: t.btnBg, border: `1.5px solid ${t.btnBorder}`, color: t.btnColor, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>⚙️</button>
     </div>
   );
 
@@ -437,7 +452,7 @@ export default function App() {
             <button onClick={() => { setArchivePuzzle(null); setShowArchive(true); }} style={{ padding: "6px 12px", background: t.btnBg, border: `1px solid ${t.btnBorder}`, borderRadius: 8, color: t.btnColor, fontSize: 12, cursor: "pointer" }}>← Archive</button>
           </div>
           <div style={{ position: "absolute", right: 24, top: "50%", transform: "translateY(-50%)" }}>
-            <button onClick={toggleTheme} style={{ width: 30, height: 30, borderRadius: "50%", background: t.btnBg, border: `1.5px solid ${t.btnBorder}`, color: t.btnColor, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{isDark ? "☀️" : "🌙"}</button>
+            <button onClick={() => setShowSettings(s => !s)} style={{ width: 32, height: 32, borderRadius: "50%", background: t.btnBg, border: `1.5px solid ${t.btnBorder}`, color: t.btnColor, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>⚙️</button>
           </div>
         </div>
         <div style={{ display: "flex", justifyContent: "center", padding: "48px 24px" }}>
@@ -487,7 +502,7 @@ export default function App() {
           </div>
           <div style={{ position: "absolute", right: 24, top: "50%", transform: "translateY(-50%)", display: "flex", gap: 8 }}>
             <button onClick={toggleSound} style={{ width: 30, height: 30, borderRadius: "50%", background: t.btnBg, border: `1.5px solid ${t.btnBorder}`, color: t.btnColor, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: soundOn ? 1 : 0.45 }}>{soundOn ? "🔊" : "🔇"}</button>
-            <button onClick={toggleTheme} style={{ width: 30, height: 30, borderRadius: "50%", background: t.btnBg, border: `1.5px solid ${t.btnBorder}`, color: t.btnColor, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{isDark ? "☀️" : "🌙"}</button>
+            <button onClick={() => setShowSettings(s => !s)} style={{ width: 32, height: 32, borderRadius: "50%", background: t.btnBg, border: `1.5px solid ${t.btnBorder}`, color: t.btnColor, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>⚙️</button>
           </div>
         </div>
         <div style={{ display: "flex", justifyContent: "center", padding: "28px 16px 48px" }}>
@@ -516,7 +531,7 @@ export default function App() {
             <button onClick={() => setShowArchive(false)} style={{ padding: "6px 12px", background: t.btnBg, border: `1px solid ${t.btnBorder}`, borderRadius: 8, color: t.btnColor, fontSize: 12, cursor: "pointer" }}>← Today</button>
           </div>
           <div style={{ position: "absolute", right: 24, top: "50%", transform: "translateY(-50%)" }}>
-            <button onClick={toggleTheme} style={{ width: 30, height: 30, borderRadius: "50%", background: t.btnBg, border: `1.5px solid ${t.btnBorder}`, color: t.btnColor, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{isDark ? "☀️" : "🌙"}</button>
+            <button onClick={() => setShowSettings(s => !s)} style={{ width: 32, height: 32, borderRadius: "50%", background: t.btnBg, border: `1.5px solid ${t.btnBorder}`, color: t.btnColor, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>⚙️</button>
           </div>
         </div>
         <div style={{ display: "flex", justifyContent: "center", padding: "28px 16px 48px" }}>
@@ -580,6 +595,7 @@ export default function App() {
         </div>
       </div>
       {showHardPromo && <HardModePromo t={t} onClose={() => setShowHardPromo(false)} />}
+      {showSettings && <SettingsPanel t={t} isDark={isDark} toggleTheme={toggleTheme} soundOn={soundOn} toggleSound={toggleSound} onHelp={() => setShowHelp(true)} onClose={() => setShowSettings(false)} />}
       {showHelp && <HowToPlay t={t} onClose={() => setShowHelp(false)} />}
       <Footer t={t} />
     </div>
@@ -1355,6 +1371,63 @@ function Footer({ t }) {
   );
 }
 
+
+// ── Settings Panel ────────────────────────────────────────────────────────────
+function SettingsPanel({ t, isDark, toggleTheme, soundOn, toggleSound, onHelp, onClose }) {
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 190 }} />
+      <div style={{
+        position: "fixed", top: 56, right: 16, zIndex: 200,
+        background: t.modalBg,
+        border: `1px solid ${t.cardBorder}`,
+        borderRadius: 14,
+        boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
+        padding: "18px 20px",
+        minWidth: 240,
+        animation: "fadeUp 0.18s ease forwards",
+        transition: "background 0.2s",
+      }}>
+        {/* Header */}
+        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: t.textFaint, marginBottom: 14, paddingBottom: 10, borderBottom: `1px solid ${t.divider}` }}>Settings</div>
+
+        {/* Sound toggle */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <span style={{ fontSize: 14, color: t.text, fontWeight: 500, transition: "color 0.2s" }}>Sound effects</span>
+          <button onClick={toggleSound} style={{ width: 44, height: 26, borderRadius: 999, background: soundOn ? "#f59e0b" : t.progressEmpty, border: "none", cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+            <div style={{ position: "absolute", top: 3, left: soundOn ? "calc(100% - 22px)" : 3, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+          </button>
+        </div>
+
+        {/* Dark mode toggle */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+          <span style={{ fontSize: 14, color: t.text, fontWeight: 500, transition: "color 0.2s" }}>Dark mode</span>
+          <button onClick={toggleTheme} style={{ width: 44, height: 26, borderRadius: 999, background: isDark ? "#f59e0b" : t.progressEmpty, border: "none", cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}>
+            <div style={{ position: "absolute", top: 3, left: isDark ? "calc(100% - 22px)" : 3, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div style={{ borderTop: `1px solid ${t.divider}`, paddingTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+
+          {/* How to play */}
+          <button onClick={() => { onHelp(); onClose(); }} style={{ width: "100%", padding: "10px 14px", background: t.btnBg, border: `1px solid ${t.btnBorder}`, borderRadius: 8, color: t.text, fontSize: 13, fontWeight: 500, cursor: "pointer", textAlign: "left", transition: "all 0.15s" }}>
+            ❓ How to play
+          </button>
+
+          {/* Follow on Bluesky */}
+          <a href="https://bsky.app/profile/bradleywithane.com" target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "10px 14px", background: "rgba(0,133,255,0.08)", border: "1px solid rgba(0,133,255,0.2)", borderRadius: 8, color: "#0085ff", fontSize: 13, fontWeight: 600, textDecoration: "none", textAlign: "left", transition: "all 0.15s", boxSizing: "border-box" }}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 320" width="16" height="16" fill="#0085ff" style={{ flexShrink: 0 }}>
+              <path d="M180 142c-16.3-31.7-60.7-90.8-102-120C38 1.8 0 20 0 60c0 12 2.7 24.6 5.4 37.2C14 137 48.2 157.4 80 160c-30 4-58 20-66 44-5.6 17 4 34 20 42 42 20 96-12 126-50 30 38 84 70 126 50 16-8 25.6-25 20-42-8-24-36-40-66-44 31.8-2.6 66-23 74.6-62.8C317.3 84.6 320 72 320 60c0-40-38-58.2-78-20C200.7 51.2 156.3 110.3 140 142z"/>
+            </svg>
+            Follow on Bluesky
+          </a>
+
+        </div>
+      </div>
+    </>
+  );
+}
 
 function HardModePromo({ onClose, t }) {
   return (
