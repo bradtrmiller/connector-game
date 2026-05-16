@@ -1419,6 +1419,11 @@ function SettingsPanel({ t, isDark, toggleTheme, soundOn, toggleSound, onHelp, o
             ❓ How to play
           </button>
 
+          {/* Email */}
+          <a href="mailto:hey@playlinqed.com" style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "10px 14px", background: t.btnBg, border: `1px solid ${t.btnBorder}`, borderRadius: 8, color: t.text, fontSize: 13, fontWeight: 500, textDecoration: "none", textAlign: "left", transition: "all 0.15s", boxSizing: "border-box" }}>
+            ✉️ Send feedback
+          </a>
+
           {/* Follow on Bluesky */}
           <a href="https://bsky.app/profile/bradleywithane.com" target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "10px 14px", background: "rgba(0,133,255,0.08)", border: "1px solid rgba(0,133,255,0.2)", borderRadius: 8, color: "#0085ff", fontSize: 13, fontWeight: 600, textDecoration: "none", textAlign: "left", transition: "all 0.15s", boxSizing: "border-box" }}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 320" width="16" height="16" fill="#0085ff" style={{ flexShrink: 0 }}>
