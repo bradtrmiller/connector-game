@@ -1193,11 +1193,18 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
           {answers.map((a, i) => {
             const q = puzzle.questions[i];
-            const displayText = (q.connectorKey || "").trim() || q.answers[q.correct];
+            // Hard mode: show what player selected if wrong, connector key if right
+            // Normal mode: always show connector key / correct answer
+            const displayText = hardMode
+              ? a.isCorrect
+                ? (q.connectorKey || "").trim() || q.answers[q.correct]
+                : q.answers[a.selected]
+              : (q.connectorKey || "").trim() || q.answers[q.correct];
             return (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, background: t.recapBg, border: `1px solid ${t.recapBorder}`, borderRadius: 8, padding: "9px 14px", transition: "background 0.2s" }}>
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, background: hardMode && !a.isCorrect ? "rgba(239,68,68,0.06)" : t.recapBg, border: `1px solid ${hardMode && !a.isCorrect ? "rgba(239,68,68,0.2)" : t.recapBorder}`, borderRadius: 8, padding: "9px 14px", transition: "background 0.2s" }}>
                 {!hardMode && <span style={{ fontSize: 13, color: a.isCorrect ? "#6ee7b7" : "#fca5a5" }}>{a.isCorrect ? "✓" : "✗"}</span>}
-                <span style={{ fontSize: 13, color: t.textSub, transition: "color 0.2s" }}>{displayText}</span>
+                {hardMode && <span style={{ fontSize: 13, color: a.isCorrect ? "#6ee7b7" : "#fca5a5" }}>{a.isCorrect ? "✓" : "✗"}</span>}
+                <span style={{ fontSize: 13, color: hardMode && !a.isCorrect ? "#fca5a5" : t.textSub, transition: "color 0.2s", textDecoration: hardMode && !a.isCorrect ? "line-through" : "none" }}>{displayText}</span>
               </div>
             );
           })}
