@@ -1049,6 +1049,7 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
           {puzzle.questions.map((pq, i) => {
             const sel = hardSelections[i];
             const rawAnswer = sel !== null ? pq.answers[sel] : "—";
+            const isCorrect = sel === pq.correct;
             const answerText = isCorrect && (pq.connectorKey || "").trim() ? pq.connectorKey : rawAnswer;
             return (
               <button key={i} onClick={() => setReviewEditQ(i)} style={{
