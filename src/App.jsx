@@ -1191,21 +1191,16 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
         <h2 style={{ fontFamily: "'Libre Baskerville', serif", fontSize: "clamp(20px,4vw,26px)", fontWeight: 700, color: t.text, lineHeight: 1.3, marginBottom: 8, transition: "color 0.2s" }}>What's the<br /><span style={{ color: "#f59e0b" }}>link?</span></h2>
         <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.6, maxWidth: 320, margin: "0 auto 20px", transition: "color 0.2s" }}>One word secretly links all four answers. What is it?</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
-          {(hardMode && answers.length === 0 ? hardSelections : answers).map((a, i) => {
-            const q = puzzle.questions[i];
-            const selected = hardMode && answers.length === 0 ? a : a?.selected;
-            const isCorrect = hardMode && answers.length === 0
-              ? (a !== null && a === q.correct)
-              : a?.isCorrect;
-            const displayText = hardMode
-              ? isCorrect
-                ? (q.connectorKey || "").trim() || q.answers[q.correct]
-                : q.answers[selected ?? q.correct]
-              : (q.connectorKey || "").trim() || q.answers[q.correct];
+          {puzzle.questions.map((q, i) => {
+            const selectedIdx = hardMode ? hardSelections[i] : (answers[i]?.selected ?? q.correct);
+            const isCorrect = selectedIdx === q.correct;
+            const displayText = isCorrect
+              ? (q.connectorKey || "").trim() || q.answers[q.correct]
+              : q.answers[selectedIdx ?? q.correct];
             return (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, background: hardMode && !isCorrect ? "rgba(239,68,68,0.06)" : t.recapBg, border: `1px solid ${hardMode && !isCorrect ? "rgba(239,68,68,0.2)" : t.recapBorder}`, borderRadius: 8, padding: "9px 14px", transition: "background 0.2s" }}>
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, background: !isCorrect ? "rgba(239,68,68,0.06)" : t.recapBg, border: `1px solid ${!isCorrect ? "rgba(239,68,68,0.2)" : t.recapBorder}`, borderRadius: 8, padding: "9px 14px", transition: "background 0.2s" }}>
                 <span style={{ fontSize: 13, color: isCorrect ? "#6ee7b7" : "#fca5a5" }}>{isCorrect ? "✓" : "✗"}</span>
-                <span style={{ fontSize: 13, color: hardMode && !isCorrect ? "#fca5a5" : t.textSub, transition: "color 0.2s", textDecoration: hardMode && !isCorrect ? "line-through" : "none" }}>{displayText}</span>
+                <span style={{ fontSize: 13, color: !isCorrect ? "#fca5a5" : t.textSub, transition: "color 0.2s", textDecoration: !isCorrect ? "line-through" : "none" }}>{displayText}</span>
               </div>
             );
           })}
