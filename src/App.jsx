@@ -1049,7 +1049,7 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
           {puzzle.questions.map((pq, i) => {
             const sel = hardSelections[i];
             const rawAnswer = sel !== null ? pq.answers[sel] : "—";
-            const answerText = sel !== null && (pq.connectorKey || "").trim() ? pq.connectorKey : rawAnswer;
+            const answerText = isCorrect && (pq.connectorKey || "").trim() ? pq.connectorKey : rawAnswer;
             return (
               <button key={i} onClick={() => setReviewEditQ(i)} style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
