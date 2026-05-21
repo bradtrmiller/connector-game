@@ -1193,11 +1193,13 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
         <p style={{ fontSize: 13, color: t.textSub, lineHeight: 1.6, maxWidth: 320, margin: "0 auto 20px", transition: "color 0.2s" }}>One word secretly links all four answers. What is it?</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 20 }}>
           {puzzle.questions.map((q, i) => {
-            const selectedIdx = hardMode ? hardSelections[i] : (answers[i]?.selected ?? q.correct);
-            const isCorrect = selectedIdx === q.correct;
-            const displayText = isCorrect
-              ? (q.connectorKey || "").trim() || q.answers[q.correct]
-              : q.answers[selectedIdx ?? q.correct];
+            const selectedIdx = hardMode ? hardSelections[i] : q.correct;
+            const isCorrect = hardMode ? selectedIdx === q.correct : answers[i]?.isCorrect;
+            const displayText = hardMode
+              ? isCorrect
+                ? (q.connectorKey || "").trim() || q.answers[q.correct]
+                : q.answers[selectedIdx ?? q.correct]
+              : (q.connectorKey || "").trim() || q.answers[q.correct];
             return (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, background: !isCorrect ? "rgba(239,68,68,0.06)" : t.recapBg, border: `1px solid ${!isCorrect ? "rgba(239,68,68,0.2)" : t.recapBorder}`, borderRadius: 8, padding: "9px 14px", transition: "background 0.2s" }}>
                 <span style={{ fontSize: 13, color: isCorrect ? "#6ee7b7" : "#fca5a5" }}>{isCorrect ? "✓" : "✗"}</span>
