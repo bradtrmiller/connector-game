@@ -1203,7 +1203,7 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
             return (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, background: !isCorrect ? "rgba(239,68,68,0.06)" : t.recapBg, border: `1px solid ${!isCorrect ? "rgba(239,68,68,0.2)" : t.recapBorder}`, borderRadius: 8, padding: "9px 14px", transition: "background 0.2s" }}>
                 <span style={{ fontSize: 13, color: isCorrect ? "#6ee7b7" : "#fca5a5" }}>{isCorrect ? "✓" : "✗"}</span>
-                <span style={{ fontSize: 13, color: !isCorrect ? "#fca5a5" : t.textSub, transition: "color 0.2s", textDecoration: !isCorrect ? "line-through" : "none" }}>{displayText}</span>
+                <span style={{ fontSize: 13, color: !isCorrect ? "#fca5a5" : t.textSub, transition: "color 0.2s" }}>{displayText}</span>
               </div>
             );
           })}
