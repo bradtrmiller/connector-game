@@ -812,16 +812,17 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
   function handleConnectorSubmit() {
     if (!connInput.trim() || connResult) return;
 
-    // In hard mode, lock in selections on first submission
+    // In hard mode, always derive current answers from hardSelections
+    // This ensures changed answers between guesses are captured correctly
     let currentAnswers = answers;
-    if (hardMode && answers.length < puzzle.questions.length) {
-      const finalAnswers = hardSelections.map((selected, i) => ({
+    if (hardMode) {
+      const freshAnswers = hardSelections.map((selected, i) => ({
         selected,
         correct: puzzle.questions[i].correct,
         isCorrect: selected === puzzle.questions[i].correct,
       }));
-      setAnswers(finalAnswers);
-      currentAnswers = finalAnswers;
+      setAnswers(freshAnswers);
+      currentAnswers = freshAnswers;
     }
 
     const inputVal = connInput.trim().toUpperCase();
@@ -1203,7 +1204,7 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
             return (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, background: !isCorrect ? "rgba(239,68,68,0.06)" : t.recapBg, border: `1px solid ${!isCorrect ? "rgba(239,68,68,0.2)" : t.recapBorder}`, borderRadius: 8, padding: "9px 14px", transition: "background 0.2s" }}>
                 <span style={{ fontSize: 13, color: isCorrect ? "#6ee7b7" : "#fca5a5" }}>{isCorrect ? "✓" : "✗"}</span>
-                <span style={{ fontSize: 13, color: !isCorrect ? "#fca5a5" : t.textSub, transition: "color 0.2s" }}>{displayText}</span>
+                <span style={{ fontSize: 13, color: !isCorrect ? "#fca5a5" : t.textSub, transition: "color 0.2s", textDecoration: !isCorrect ? "line-through" : "none" }}>{displayText}</span>
               </div>
             );
           })}
@@ -1274,6 +1275,20 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
                 <div style={{ fontSize: 12, color: t.textMuted, lineHeight: 1.5, transition: "color 0.2s" }}>
                   {note ? renderHighlighted(note, t.textMuted, "#f59e0b") : q.fact}
                 </div>
+                {/* Expandable: show the question + all answers */}
+                <details style={{ marginTop: 6 }}>
+                  <summary style={{ fontSize: 11, color: t.textFaint, cursor: "pointer", letterSpacing: "0.04em", userSelect: "none" }}>See question</summary>
+                  <div style={{ marginTop: 8, padding: "10px 12px", background: t.answerBg, border: `1px solid ${t.answerBorder}`, borderRadius: 8 }}>
+                    <p style={{ fontSize: 12, color: t.textSub, marginBottom: 8, lineHeight: 1.5 }}>{q.question}</p>
+                    {q.answers.map((ans, ai) => (
+                      <div key={ai} style={{ fontSize: 12, padding: "4px 0", color: ai === q.correct ? "#10b981" : ai === answers[i]?.selected && !answers[i]?.isCorrect ? "#ef4444" : t.textFaint, display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, fontWeight: 700 }}>{String.fromCharCode(65 + ai)}</span>
+                        <span style={{ textDecoration: ai === answers[i]?.selected && !answers[i]?.isCorrect ? "line-through" : "none" }}>{ans}</span>
+                        {ai === q.correct && <span style={{ fontSize: 10, color: "#10b981" }}>✓</span>}
+                      </div>
+                    ))}
+                  </div>
+                </details>
               </div>
             </div>
           );
