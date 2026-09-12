@@ -870,7 +870,9 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
   }
 
   function buildShareText() {
-    const label = isArchive ? `linqed archive — ${puzzle.date}` : `linqed — ${puzzle.date}`;
+    const puzzleNum = getPuzzleNumber(puzzle.date);
+    const numTag = ` - #${puzzleNum}`;
+    const label = isArchive ? `linqed archive — ${puzzle.date}${numTag}` : `linqed — ${puzzle.date}${numTag}`;
     const hintTag = hintUsed !== -1 ? " 💡" : "";
 
     if (hardMode && guessHistory.length > 1) {
@@ -881,7 +883,7 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
         const hint = snap.hintUsedThisGuess ? "💡" : "";
         return `${dots} 🔗${connEmoji}${hint}`;
       });
-      return `🧩 linqed 😈 — ${puzzle.date}\n${rows.join("\n")}\n\nplaylinqed.com`;
+      return `🧩 linqed 😈 — ${puzzle.date}${numTag}\n${rows.join("\n")}\n\nplaylinqed.com`;
     }
 
     // Normal single-row share
@@ -895,11 +897,14 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
   function handleShare() {
     const text = buildShareText();
     track("result_shared", { puzzle_date: puzzle.date, mode: hardMode ? "hard" : "normal", is_archive: isArchive });
+    // Always copy to clipboard first
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }).catch(() => {});
+    // Also trigger native share sheet on mobile if available
     if (navigator.share) {
       navigator.share({ text }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(text);
-      setCopied(true); setTimeout(() => setCopied(false), 2500);
     }
   }
 
@@ -1204,7 +1209,7 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
             return (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, background: !isCorrect ? "rgba(239,68,68,0.06)" : t.recapBg, border: `1px solid ${!isCorrect ? "rgba(239,68,68,0.2)" : t.recapBorder}`, borderRadius: 8, padding: "9px 14px", transition: "background 0.2s" }}>
                 <span style={{ fontSize: 13, color: isCorrect ? "#6ee7b7" : "#fca5a5" }}>{isCorrect ? "✓" : "✗"}</span>
-                <span style={{ fontSize: 13, color: !isCorrect ? "#fca5a5" : t.textSub, transition: "color 0.2s", textDecoration: !isCorrect ? "line-through" : "none" }}>{displayText}</span>
+                <span style={{ fontSize: 13, color: !isCorrect ? "#fca5a5" : t.textSub, transition: "color 0.2s" }}>{displayText}</span>
               </div>
             );
           })}
@@ -1300,23 +1305,23 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
         )}
       </Card>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
         <button onClick={handleShare} style={{
-          flex: 1, padding: "13px",
-          background: copied ? "rgba(16,185,129,0.15)" : t.sharePreviewBg,
-          border: `1px solid ${copied ? "rgba(16,185,129,0.3)" : t.sharePreviewBorder}`,
-          borderRadius: 10, color: copied ? "#6ee7b7" : t.text,
-          fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "all 0.2s",
-        }}>{copied ? "✓ Copied!" : "Share 📲"}</button>
+          width: "100%", padding: "15px",
+          background: copied ? "rgba(16,185,129,0.15)" : "#f59e0b",
+          border: `1px solid ${copied ? "rgba(16,185,129,0.3)" : "#f59e0b"}`,
+          borderRadius: 10, color: copied ? "#6ee7b7" : "#07070d",
+          fontSize: 15, fontWeight: 700, cursor: "pointer", transition: "all 0.2s",
+        }}>{copied ? "✓ Copied!" : "Share your results!  📲"}</button>
 
         {!isArchive && (
-          <button onClick={onOpenArchive} style={{ flex: 1, padding: "13px", background: t.btnBg, border: `1px solid ${t.btnBorder}`, borderRadius: 10, color: t.text, fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}>
+          <button onClick={onOpenArchive} style={{ width: "100%", padding: "13px", background: t.btnBg, border: `1px solid ${t.btnBorder}`, borderRadius: 10, color: t.text, fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}>
             Archive 📅
           </button>
         )}
 
         {isArchive && (
-          <button onClick={onBackToArchive} style={{ flex: 1, padding: "13px", background: "rgba(245,158,11,0.08)", border: "1.5px solid rgba(245,158,11,0.25)", borderRadius: 10, color: "#f59e0b", fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}>
+          <button onClick={onBackToArchive} style={{ width: "100%", padding: "13px", background: "rgba(245,158,11,0.08)", border: "1.5px solid rgba(245,158,11,0.25)", borderRadius: 10, color: "#f59e0b", fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}>
             ← Archive
           </button>
         )}
@@ -1339,6 +1344,11 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
           </a>
         </div>
       )}
+
+      {/* Hidden reset — only shown on the example puzzle */}
+      {puzzle.date === EXAMPLE_PUZZLE.date && (
+        <ExampleReset storageKey={storageKey} onReset={() => { setStep(STEPS.MODE); setAnswers([]); setConnResult(null); setGuessCount(0); setHintUsed(-1); setGuessHistory([]); setHardSelections([null,null,null,null]); }} t={t} />
+      )}
     </div>
   );
 }
@@ -1354,6 +1364,35 @@ function Tag({ children, accent, t }) {
 
 function GoldBtn({ children, onClick }) {
   return <button onClick={onClick} style={{ width: "100%", padding: "13px", background: "#f59e0b", border: "none", borderRadius: 10, color: "#07070d", fontSize: 14, fontWeight: 700, cursor: "pointer", letterSpacing: "0.03em" }}>{children}</button>;
+}
+
+// ── Example Puzzle Reset ──────────────────────────────────────────────────────
+function ExampleReset({ storageKey, onReset, t }) {
+  const [taps, setTaps] = useState(0);
+  const [confirmed, setConfirmed] = useState(false);
+
+  function handleTap() {
+    const next = taps + 1;
+    setTaps(next);
+    if (next >= 5) setConfirmed(true);
+  }
+
+  function handleReset() {
+    localStorage.removeItem(storageKey);
+    setConfirmed(false);
+    setTaps(0);
+    onReset();
+  }
+
+  return (
+    <div onClick={!confirmed ? handleTap : undefined} style={{ marginTop: 24, textAlign: "center", minHeight: 28, cursor: confirmed ? "default" : "default", userSelect: "none" }}>
+      {confirmed && (
+        <button onClick={handleReset} style={{ padding: "5px 14px", background: "transparent", border: `1px solid ${t.cardBorder}`, borderRadius: 6, color: t.textFaint, fontSize: 11, cursor: "pointer", fontFamily: "'DM Mono', monospace", letterSpacing: "0.08em" }}>
+          ↩ Try example again
+        </button>
+      )}
+    </div>
+  );
 }
 
 function Countdown({ t }) {
