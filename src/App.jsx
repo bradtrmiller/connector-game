@@ -1314,11 +1314,9 @@ function Game({ puzzle, t, playSound = () => {}, isArchive = false, startHardMod
           fontSize: 15, fontWeight: 700, cursor: "pointer", transition: "all 0.2s",
         }}>{copied ? "✓ Copied!" : "Share your results!  📲"}</button>
 
-        {parseInt(localStorage.getItem(streakKey) || "0") > 0 && (
-          <a href="https://docs.google.com/forms/d/e/1FAIpQLSfRT2SXNaZGnJUQqDVpqY6k1QHrvP_GmjeYDYw27rpYOTtlCQ/viewform?usp=dialog" target="_blank" rel="noopener noreferrer" style={{ display: "block", width: "100%", padding: "15px", background: t.cardBg, border: `1px solid ${t.cardBorder}`, borderRadius: 10, textDecoration: "none", color: t.text, fontSize: 15, fontWeight: 700, textAlign: "center", boxSizing: "border-box", transition: "all 0.15s" }}>
-            💬 Help us improve linqed!
-          </a>
-        )}
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSfRT2SXNaZGnJUQqDVpqY6k1QHrvP_GmjeYDYw27rpYOTtlCQ/viewform?usp=dialog" target="_blank" rel="noopener noreferrer" style={{ display: "block", width: "100%", padding: "15px", background: t.cardBg, border: `1px solid ${t.cardBorder}`, borderRadius: 10, textDecoration: "none", color: t.text, fontSize: 15, fontWeight: 700, textAlign: "center", boxSizing: "border-box", transition: "all 0.15s" }}>
+          💬 Help us improve linqed!
+        </a>
 
         {!isArchive && (
           <button onClick={onOpenArchive} style={{ width: "100%", padding: "13px", background: t.btnBg, border: `1px solid ${t.btnBorder}`, borderRadius: 10, color: t.text, fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}>
