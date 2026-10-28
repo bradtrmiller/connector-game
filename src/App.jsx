@@ -1429,7 +1429,7 @@ function Footer({ t }) {
   return (
     <div style={{ textAlign: "center", paddingBottom: 28, transition: "color 0.2s" }}>
       <p style={{ fontSize: 11, color: t.textFaint, letterSpacing: "0.04em" }}>
-        A game by <a href="https://bsky.app/profile/bradleywithane.com" target="_blank" rel="noopener noreferrer" style={{ color: "#f59e0b", fontWeight: 600, textDecoration: "none" }}>Bradley Miller</a>
+        A game from <a href="https://brad.rocks" target="_blank" rel="noopener noreferrer" style={{ color: "#f59e0b", fontWeight: 600, textDecoration: "none" }}>brad.rocks</a>
       </p>
     </div>
   );
